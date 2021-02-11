@@ -1,0 +1,49 @@
+package ea4k.gp
+
+import ea4k.gp.Utils.createConstantTreeNode
+
+/**
+ * A tree optimizer is a function that transform a tree node into another
+ * tree node, possibly optimized or with less overall tree node.
+ */
+typealias TreeOptimizer<R> = (BaseTreeNode<R>) -> BaseTreeNode<R>
+
+/**
+ * Optimize tree for execution
+ * This will first, recursively call optimizeTree on its children,
+ * Then it will attempt to transform the tree to a constant
+ * Then it will call the treeNode's optimizeForEvaluation
+ */
+fun <R> optimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
+    val cloned = root.clone()
+    return doOptimizeForEvaluation(cloned)
+}
+
+private fun <R> doOptimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
+    root.children.forEachIndexed { index, treeNode ->
+        root.children[index] = doOptimizeForEvaluation(treeNode)
+    }
+    val constantNode = optimizeConstants(root)
+    if (constantNode!=null) {
+        return constantNode
+    }
+    val tree = root.optimizeForEvaluation()
+    if (tree != null) {
+        return tree
+    }
+    return root
+}
+
+/**
+ * A tree can be autoshake if its subtree is pure.
+ * It just evaluate itself, and got replaced by a constant tree node.
+ */
+fun <R> optimizeConstants(tree: BaseTreeNode<R>): BaseTreeNode<R>? {
+    if (!tree.isSubtreeConstant || tree.children.isEmpty()){
+        return null
+    }
+
+    val value = tree.call(CallCtx(arrayOf()))
+    return createConstantTreeNode(value)
+}
+
