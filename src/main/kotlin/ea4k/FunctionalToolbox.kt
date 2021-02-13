@@ -36,7 +36,7 @@ class FunctionalToolbox<I: Individual<F>, F>(
     }
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withEvaluateFn(evaluateFn: (I) -> F): FunctionalToolbox<I, F> {
+fun <I: Individual<F>, F> Toolbox<I, F>.withEvaluate(evaluateFn: (I) -> F): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         evaluateFn,
         this::clone,
@@ -47,7 +47,7 @@ fun <I: Individual<F>, F> Toolbox<I, F>.withEvaluateFn(evaluateFn: (I) -> F): Fu
     )
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withCloneFn(cloneFn: (I) -> I): FunctionalToolbox<I, F> {
+fun <I: Individual<F>, F> Toolbox<I, F>.withClone(cloneFn: (I) -> I): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         this::evaluate,
         cloneFn,
