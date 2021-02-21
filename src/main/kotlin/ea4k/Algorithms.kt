@@ -119,6 +119,19 @@ fun <I: Individual<F>, F> varAnd(
     return cloned
 }
 
+// Evaluate the individuals with an invalid fitness
+fun <I: Individual<F>, F> evaluateInvalid(population: List<I>, toolbox: Toolbox<I, F>) {
+    // Evaluate the individuals with an invalid fitness
+    val invalidIndividual = population.filter {
+        it.fitness == null
+    }
+
+    toolbox.map(toolbox::evaluate, invalidIndividual)
+        .zip(invalidIndividual).forEach {
+            it.second.fitness = it.first
+        }
+}
+
 /*
     This is the :math:`(\mu + \lambda)` evolutionary algorithm.
     :param population: A list of individuals.
@@ -162,7 +175,7 @@ fun <I: Individual<F>, F> varAnd(
     variation.
 */
 fun <I: Individual<F>, F> eaMuPlusLambda(
-    oripopulation: List<I>,
+    population: List<I>,
     toolbox: Toolbox<I, F>,
     mu: Int,
     lambda_: Int,
@@ -171,17 +184,9 @@ fun <I: Individual<F>, F> eaMuPlusLambda(
     ngen: Int
 ): List<I> {
 
-    var population = oripopulation
+    var population = population
 
-    // Evaluate the individuals with an invalid fitness
-    val invalidIndividual = population.filter {
-        it.fitness == null
-    }
-
-    val fitnesses = toolbox.map(toolbox::evaluate, invalidIndividual)
-    fitnesses.zip(invalidIndividual).forEach {
-        it.second.fitness = it.first
-    }
+    evaluateInvalid(population, toolbox)
 
     toolbox.onGeneration(population)
 
@@ -193,16 +198,7 @@ fun <I: Individual<F>, F> eaMuPlusLambda(
             cxpb,
             mutpb)
 
-        // Evaluate the individuals with an invalid fitness
-        val invalidIndividual = offspring
-            .filter {
-            it.fitness == null
-        }
-
-        val fitnesses = toolbox.map(toolbox::evaluate, invalidIndividual)
-        fitnesses.zip(invalidIndividual).forEach {
-            it.second.fitness = it.first
-        }
+        evaluateInvalid(offspring, toolbox)
 
         // Select the next generation population
         population = toolbox.select(population + offspring, mu)
@@ -264,15 +260,106 @@ fun <I: Individual<F>, F> eaMuPlusLambda(
        Basic Algorithms and Operators", 2000.
 */
 fun <I: Individual<F>, F> eaSimple(
-    oripopulation: List<I>,
+    population: List<I>,
     toolbox: Toolbox<I, F>,
     cxpb: Float,
     mutpb: Float,
     ngen: Int
 ): List<I> {
-    var population = oripopulation
+    var population = population
 
     // Evaluate the individuals with an invalid fitness
+    val invalidIndividual = population.filter {
+        it.fitness == null
+    }
+
+    val fitnesses = toolbox.map(toolbox::evaluate, invalidIndividual)
+    fitnesses.zip(invalidIndividual).forEach {
+        it.second.fitness = it.first
+    }
+    evaluateInvalid(population, toolbox)
+
+    toolbox.onGeneration(population)
+
+    (1..(ngen+1)).forEach {
+        // Select the next generation population
+        var offspring = toolbox.select(population, population.size)
+
+        offspring = varAnd(offspring, toolbox, cxpb, mutpb)
+
+        evaluateInvalid(offspring, toolbox)
+
+        population = offspring
+
+        // Update the hall of fame with the generated individuals
+        toolbox.onGeneration(offspring)
+    }
+
+    return population
+}
+
+
+/*
+def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
+                    stats=None, halloffame=None, verbose=__debug__):
+    """This is the :math:`(\mu~,~\lambda)` evolutionary algorithm.
+    :param population: A list of individuals.
+    :param toolbox: A :class:`~deap.base.Toolbox` that contains the evolution
+                    operators.
+    :param mu: The number of individuals to select for the next generation.
+    :param lambda\_: The number of children to produce at each generation.
+    :param cxpb: The probability that an offspring is produced by crossover.
+    :param mutpb: The probability that an offspring is produced by mutation.
+    :param ngen: The number of generation.
+    :param stats: A :class:`~deap.tools.Statistics` object that is updated
+                  inplace, optional.
+    :param halloffame: A :class:`~deap.tools.HallOfFame` object that will
+                       contain the best individuals, optional.
+    :param verbose: Whether or not to log the statistics.
+    :returns: The final population
+    :returns: A class:`~deap.tools.Logbook` with the statistics of the
+              evolution
+    The algorithm takes in a population and evolves it in place using the
+    :func:`varOr` function. It returns the optimized population and a
+    :class:`~deap.tools.Logbook` with the statistics of the evolution. The
+    logbook will contain the generation number, the number of evaluations for
+    each generation and the statistics if a :class:`~deap.tools.Statistics` is
+    given as argument. The *cxpb* and *mutpb* arguments are passed to the
+    :func:`varOr` function. The pseudocode goes as follow ::
+        evaluate(population)
+        for g in range(ngen):
+            offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
+            evaluate(offspring)
+            population = select(offspring, mu)
+    First, the individuals having an invalid fitness are evaluated. Second,
+    the evolutionary loop begins by producing *lambda_* offspring from the
+    population, the offspring are generated by the :func:`varOr` function. The
+    offspring are then evaluated and the next generation population is
+    selected from **only** the offspring. Finally, when
+    *ngen* generations are done, the algorithm returns a tuple with the final
+    population and a :class:`~deap.tools.Logbook` of the evolution.
+    .. note::
+        Care must be taken when the lambda:mu ratio is 1 to 1 as a
+        non-stochastic selection will result in no selection at all as the
+        operator selects *lambda* individuals from a pool of *mu*.
+    This function expects :meth:`toolbox.mate`, :meth:`toolbox.mutate`,
+    :meth:`toolbox.select` and :meth:`toolbox.evaluate` aliases to be
+    registered in the toolbox. This algorithm uses the :func:`varOr`
+    variation.
+    """
+    */
+fun <I: Individual<F>, F> eaMuCommaLambda(
+    population: List<I>,
+    toolbox: Toolbox<I, F>,
+    mu: Int,
+    lambda_: Int,
+    cxpb: Float,
+    mutpb: Float,
+    ngen: Int
+): List<I> {
+    check(lambda_ >= mu, { "lambda must be greater or equal to mu." })
+
+    var population = population
     val invalidIndividual = population.filter {
         it.fitness == null
     }
@@ -284,26 +371,15 @@ fun <I: Individual<F>, F> eaSimple(
 
     toolbox.onGeneration(population)
 
-    (1..(ngen+1)).forEach {
-        // Select the next generation population
-        var offspring = toolbox.select(population, oripopulation.size)
+    (1..ngen).forEach {
+        val offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
 
-        offspring = varAnd(offspring, toolbox, cxpb, mutpb)
+        evaluateInvalid(offspring, toolbox)
 
-        // Evaluate the individuals with an invalid fitness
-        val invalidIndividual = offspring
-            .filter {
-                it.fitness == null
-            }
-        val fitnesses = toolbox.map(toolbox::evaluate, invalidIndividual)
-        fitnesses.zip(invalidIndividual).forEach {
-            it.second.fitness = it.first
-        }
+        // Select next generation
+        population = toolbox.select(offspring, mu)
 
-        population = offspring
-
-        // Update the hall of fame with the generated individuals
-        toolbox.onGeneration(offspring)
+        toolbox.onGeneration(population)
     }
 
     return population
