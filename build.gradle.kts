@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.asdacap"
-version = "0.0.1-alpha"
+version = "0.0.2-alpha"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
