@@ -39,11 +39,6 @@ abstract class BaseTreeNode<out R> {
     abstract fun call(ctx: CallCtx): R
 
     /**
-     * Clone this treeNode. This method is also responsible for cloning its's children.
-     */
-    abstract fun clone(): BaseTreeNode<R>
-
-    /**
      * Create a copy of this treeNode with its children replaced
      */
     abstract fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<out R>
@@ -51,7 +46,7 @@ abstract class BaseTreeNode<out R> {
     /**
      * Create a copy of this treeNode with its children on the particular index swapped
      */
-    open fun replaceChildren(index: Int, replaceWith: BaseTreeNode<*>): BaseTreeNode<out R> {
+    open fun replaceChild(index: Int, replaceWith: BaseTreeNode<*>): BaseTreeNode<out R> {
         return replaceChildren(children.mapIndexed { cIndex, baseTreeNode ->
             if (cIndex == index) {
                 replaceWith
@@ -83,42 +78,20 @@ abstract class BaseTreeNode<out R> {
     }
 
     /**
-     * Return a list of pair of tree node and an integer.
-     * The tree node is basically a parent, and the integer is an index of a child.
-     * This makes it possible to replace a child of a node.
-     * A downside of that is that, the root node can never be swapped.
+     * Return a list of tree node for the whole subtree
      * It also detect cycles
+     * Iteration is in postOrder order
      */
-    fun iterateAllWithParentAndIndex(): List<Pair<BaseTreeNode<*>, Int>> {
+    fun iterateAll(): List<BaseTreeNode<*>> {
         return iterateDfs(mutableSetOf())
     }
 
-    private fun iterateDfs(dedup: MutableSet<BaseTreeNode<*>>): List<Pair<BaseTreeNode<*>, Int>> {
+    private fun iterateDfs(dedup: MutableSet<BaseTreeNode<*>>): List<BaseTreeNode<*>> {
         if (dedup.contains(this)) {
             throw Exception("Cycle detected!")
         }
         dedup.add(this)
-        val result = children.flatMap { it.iterateDfs(dedup) } +
-                children.mapIndexed { i, tree ->
-                    Pair(this, i)
-                }
-        dedup.remove(this)
-        return result
-    }
-
-    fun iterateAll(): List<BaseTreeNode<*>> {
-        return iterateDfs2(mutableSetOf())
-    }
-
-    private fun iterateDfs2(dedup: MutableSet<BaseTreeNode<*>>): List<BaseTreeNode<*>> {
-        if (dedup.contains(this)) {
-            throw Exception("Cycle detected!")
-        }
-        dedup.add(this)
-        val result = children.flatMap { it.iterateDfs2(dedup) } +
-                children.map { tree ->
-                    tree
-                }
+        val result = children.flatMap { it.iterateDfs(dedup) } + this
         dedup.remove(this)
         return result
     }
@@ -144,7 +117,7 @@ abstract class BaseTreeNode<out R> {
     }
 }
 
-fun BaseTreeNode<*>.withDescendantReplaced(toReplace: BaseTreeNode<*>, replaceWith: BaseTreeNode<*>): BaseTreeNode<*> {
+fun BaseTreeNode<*>.replaceChild(toReplace: BaseTreeNode<*>, replaceWith: BaseTreeNode<*>): BaseTreeNode<*> {
     if (this === toReplace) {
         return replaceWith
     }
@@ -155,7 +128,7 @@ fun BaseTreeNode<*>.withDescendantReplaced(toReplace: BaseTreeNode<*>, replaceWi
         if (replaced) {
             it
         } else {
-            val newChild = it.withDescendantReplaced(toReplace, replaceWith)
+            val newChild = it.replaceChild(toReplace, replaceWith)
             if (newChild !== it) {
                 replaced = true
             }

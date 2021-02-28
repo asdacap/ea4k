@@ -32,10 +32,6 @@ class GeneratorTerminalFactory<R: Any>(val generator: () -> R, override val retu
     class TreeNode<R>(val constant: R, val generator: () -> R): BaseTreeNode<R>() {
         override val returnType: KType = constant!!::class.createType()
 
-        override fun clone(): BaseTreeNode<R> {
-            return TreeNode(constant, generator)
-        }
-
         override fun call(ctx: CallCtx): R {
             return constant
         }

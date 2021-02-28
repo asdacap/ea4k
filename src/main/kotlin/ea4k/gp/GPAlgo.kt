@@ -1,7 +1,6 @@
 package ea4k.gp
 
 import ea4k.gp.Utils.randomChoice
-import ea4k.gp.Utils.randomChoiceLastBiased
 import kotlin.random.Random
 import kotlin.reflect.KType
 
@@ -126,8 +125,8 @@ fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNod
 
         // This does mean that the top level node can never be swapped
         return Pair(
-            tr1.withDescendantReplaced(tr1Idx, tr2Idx) as BaseTreeNode<R>,
-            tr2.withDescendantReplaced(tr2Idx, tr1Idx) as BaseTreeNode<R>
+            tr1.replaceChild(tr1Idx, tr2Idx) as BaseTreeNode<R>,
+            tr2.replaceChild(tr2Idx, tr1Idx) as BaseTreeNode<R>
         )
     }
 
@@ -188,7 +187,7 @@ fun mutUniform(treeNode: BaseTreeNode<*>, expr: (KType) -> BaseTreeNode<*>): Bas
     if (generated.returnType != returnType) {
         throw Exception("unexpected return type")
     }
-    return treeNode.withDescendantReplaced(selected, generated)
+    return treeNode.replaceChild(selected, generated)
 }
 
 

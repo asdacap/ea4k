@@ -109,10 +109,6 @@ class FromFuncTreeNodeFactory <R>(
             return func.invoke(ctx, childArray)
         }
 
-        override fun clone(): BaseTreeNode<R> {
-            return TreeNode(func, returnType, children.map { it.clone() }, treeOptimizer, isPure)
-        }
-
         override fun isNodeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean {
             return otherTree is TreeNode
                     && otherTree.func == func
