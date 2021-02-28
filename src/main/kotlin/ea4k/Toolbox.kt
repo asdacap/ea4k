@@ -14,6 +14,11 @@ interface Toolbox<I, F> {
     // What happen to invalid individual depends on the selector
     fun evaluate(individual: I): F?
 
+    // Evaluate multiple individuals. Override if it can be optimized
+    fun evaluate(individuals: List<I>): List<F?> {
+        return map(::evaluate, individuals)
+    }
+
     fun select(list: List<IndividualWithFitness<I, F>>, k: Int): List<IndividualWithFitness<I, F>>
 
     fun mate(individual: I, individual2: I): Pair<I, I>

@@ -130,7 +130,7 @@ fun <I, F> evaluateInvalid(population: List<IndividualWithFitness<I, F>>, toolbo
         it.second.fitness == null
     }
 
-    toolbox.map(toolbox::evaluate, invalidIndividual.map { it.second.individual })
+    toolbox.evaluate(invalidIndividual.map { it.second.individual })
         .zip(invalidIndividual).forEach {
             asMut[it.second.first] = IndividualWithFitness(it.second.second.individual, it.first)
         }
