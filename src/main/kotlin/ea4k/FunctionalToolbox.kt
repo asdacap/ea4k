@@ -6,8 +6,8 @@ package ea4k
 class FunctionalToolbox<I, F>(
     val evaluateFn: (I) -> F?,
     val selectFn: (List<IndividualWithFitness<I,F>>, Int) -> List<IndividualWithFitness<I, F>>,
-    val mateFn: (I, I) -> Pair<I, I>,
-    val mutateFn: (I) -> I,
+    val mateFn: (I, I) -> Pair<I, I> = { id1, id2 -> id1 to id2 },
+    val mutateFn: (I) -> I = { it },
     val onGenerationFn: (List<IndividualWithFitness<I, F>>) -> Unit = {},
 ): Toolbox<I, F> {
     override fun evaluate(individual: I): F? {

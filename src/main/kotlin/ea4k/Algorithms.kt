@@ -197,14 +197,14 @@ fun <I, F> eaMuPlusLambda(
     toolbox.onGeneration(population)
 
     (1..(ngen+1)).forEach {
-        val offspring = varOr(
+        var offspring = varOr(
             population,
             toolbox,
             lambda_,
             cxpb,
             mutpb)
 
-        evaluateInvalid(offspring, toolbox)
+        offspring = evaluateInvalid(offspring, toolbox)
 
         // Select the next generation population
         population = toolbox.select(population + offspring, mu)
@@ -285,7 +285,7 @@ fun <I, F> eaSimple(
 
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
 
-        evaluateInvalid(offspring, toolbox)
+        offspring = evaluateInvalid(offspring, toolbox)
 
         population = offspring
 
@@ -363,9 +363,9 @@ fun <I, F> eaMuCommaLambda(
     toolbox.onGeneration(population)
 
     (1..ngen).forEach {
-        val offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
+        var offspring = varOr(population, toolbox, lambda_, cxpb, mutpb)
 
-        evaluateInvalid(offspring, toolbox)
+        offspring = evaluateInvalid(offspring, toolbox)
 
         // Select next generation
         population = toolbox.select(offspring, mu)
