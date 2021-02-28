@@ -1,5 +1,10 @@
 package com.asdacap.ea4k
 
+import com.asdacap.ea4k.Algorithms.eaMuCommaLambda
+import com.asdacap.ea4k.Algorithms.eaMuPlusLambda
+import com.asdacap.ea4k.Algorithms.eaSimple
+import com.asdacap.ea4k.Crossover.cxUniform
+import com.asdacap.ea4k.Selection.selTournament
 import org.junit.jupiter.api.Test
 import kotlin.random.Random.Default.nextFloat
 

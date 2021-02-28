@@ -1,160 +1,53 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.Utils.randomChoice
-import kotlin.random.Random
 import kotlin.reflect.KType
 
-fun <R> generate(pset: PSet<R>, min: Int, max: Int, condition: (Int, Int) -> Boolean, type: KType): BaseTreeNode<*> {
-    /*
-    """Generate a Tree as a list of list. The tree is build
-    from the root to the leaves, and it stop growing when the
-    condition is fulfilled.
-    :param pset: Primitive set from which primitives are selected.
-    :param min_: Minimum height of the produced trees.
-    :param max_: Maximum Height of the produced trees.
-    :param condition: The condition is a function that takes two arguments,
-                      the height of the tree to build and the current
-                      depth in the tree.
-    :param type_: The type that should return the tree when called, when
-                  :obj:`None` (default) the type of :pset: (pset.ret)
-                  is assumed.
-    :returns: A grown tree with leaves at possibly different depths
-              depending on the condition function.
-    """
-     */
-
-    val height = Random.nextInt(min, max)
-
-    var recurGen: ((Int, KType) -> BaseTreeNode<*>)? = null
-    recurGen = { depth, ret ->
-        if (condition(height, depth)) {
-            val terminalOpts = pset.terminals[ret]
-            if (terminalOpts == null || terminalOpts.size == 0) {
-                throw Exception("The ea4k.gp.generate function tried to add " +
-                        "a terminal of type $ret, but there is " +
-                        "none available.")
-            }
-            val pickedTerminal = randomChoice(terminalOpts)
-            pickedTerminal.createNode(listOf())
-        } else {
-            val primitiveOpts = pset.primitives[ret]
-            if (primitiveOpts == null || primitiveOpts.size == 0) {
-                throw Exception("The ea4k.gp.generate function tried to add " +
-                        "a primitive of type '$ret', but there is " +
-                        "none available.".format(ret))
-            }
-            val primitive = randomChoice(primitiveOpts)
-            primitive.createNode(primitive.args.map { recurGen!!.invoke(depth+1, it) }.toList())
-        }
-    }
-
-    return recurGen(0, type)
-}
-
-fun <R> genFull(pset: PSet<R>, min: Int, max: Int, type: KType): BaseTreeNode<*> {
-    """Generate an expression where each leaf has the same depth
-    between *min* and *max*.
-    :param pset: Primitive set from which primitives are selected.
-    :param min_: Minimum height of the produced trees.
-    :param max_: Maximum Height of the produced trees.
-    :param type_: The type that should return the tree when called, when
-                  :obj:`None` (default) the type of :pset: (pset.ret)
-                  is assumed.
-    :returns: A full tree with all leaves at the same depth.
-    """
-
-    return generate(pset, min, max, {h, d -> h == d}, type)
-}
-
-fun <R> genGrow(pset: PSet<R>, min: Int, max: Int, type: KType): BaseTreeNode<*> {
-    """Generate an expression where each leaf might have a different depth
-    between *min* and *max*.
-    :param pset: Primitive set from which primitives are selected.
-    :param min_: Minimum height of the produced trees.
-    :param max_: Maximum Height of the produced trees.
-    :param type_: The type that should return the tree when called, when
-                  :obj:`None` (default) the type of :pset: (pset.ret)
-                  is assumed.
-    :returns: A grown tree with leaves at possibly different depths.
-    """
-
-    val cond: (Int, Int) -> Boolean = { h, d ->
-        d == h || (d >= min && Random.nextFloat() < pset.terminalRatio)
-    }
-    return generate(pset, min, max, cond, type)
-}
-
-fun getReturnType(pair: Pair<BaseTreeNode<*>, Int>): KType {
-    return pair.first.children[pair.second].returnType;
-}
-
-fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNode<R>, BaseTreeNode<R>> {
-    """Randomly select crossover point in each individual and exchange each
+object Mutator {
+    fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNode<R>, BaseTreeNode<R>> {
+        """Randomly select crossover point in each individual and exchange each
     subtree with the point as root between each individual.
     :param ind1: First tree participating in the crossover.
     :param ind2: Second tree participating in the crossover.
     :returns: A tuple of two trees.
     """
 
-    if (tr1.size == 1 || tr2.size == 1) {
-        // No crossover on single node tree
+        if (tr1.size == 1 || tr2.size == 1) {
+            // No crossover on single node tree
+            return Pair(tr1, tr2)
+        }
+
+        val tr1TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
+        val tr2TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
+        val tr1Types: MutableSet<KType> = mutableSetOf();
+        val tr2Types: MutableSet<KType> = mutableSetOf();
+
+        tr1.iterateAll().forEach {
+            tr1TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
+            tr1Types.add(it.returnType)
+        }
+        tr2.iterateAll().forEach {
+            tr2TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
+            tr2Types.add(it.returnType)
+        }
+
+        val commonTypes = tr1Types.intersect(tr2Types)
+
+        if (commonTypes.size > 0) {
+            val chosenType = randomChoice(commonTypes.toList());
+
+            val tr1Idx = randomChoice(tr1TypeMap[chosenType]!!)
+            val tr2Idx = randomChoice(tr2TypeMap[chosenType]!!)
+
+            // This does mean that the top level node can never be swapped
+            return Pair(
+                tr1.replaceChild(tr1Idx, tr2Idx) as BaseTreeNode<R>,
+                tr2.replaceChild(tr2Idx, tr1Idx) as BaseTreeNode<R>
+            )
+        }
+
         return Pair(tr1, tr2)
     }
-
-    val tr1TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
-    val tr2TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
-    val tr1Types: MutableSet<KType> = mutableSetOf();
-    val tr2Types: MutableSet<KType> = mutableSetOf();
-
-    tr1.iterateAll().forEach {
-        tr1TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
-        tr1Types.add(it.returnType)
-    }
-    tr2.iterateAll().forEach {
-        tr2TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
-        tr2Types.add(it.returnType)
-    }
-
-    val commonTypes = tr1Types.intersect(tr2Types)
-
-    if (commonTypes.size > 0) {
-        val chosenType = randomChoice(commonTypes.toList());
-
-        val tr1Idx = randomChoice(tr1TypeMap[chosenType]!!)
-        val tr2Idx = randomChoice(tr2TypeMap[chosenType]!!)
-
-        // This does mean that the top level node can never be swapped
-        return Pair(
-            tr1.replaceChild(tr1Idx, tr2Idx) as BaseTreeNode<R>,
-            tr2.replaceChild(tr2Idx, tr1Idx) as BaseTreeNode<R>
-        )
-    }
-
-    return Pair(tr1, tr2)
-}
-
-/*
-def genHalfAndHalf(pset, min_, max_, type_=None):
-    """Generate an expression with a PrimitiveSet *pset*.
-    Half the time, the expression is generated with :func:`~deap.ea4k.gp.genGrow`,
-    the other half, the expression is generated with :func:`~deap.ea4k.gp.genFull`.
-    :param pset: Primitive set from which primitives are selected.
-    :param min_: Minimum height of the produced trees.
-    :param max_: Maximum Height of the produced trees.
-    :param type_: The type that should return the tree when called, when
-                  :obj:`None` (default) the type of :pset: (pset.ret)
-                  is assumed.
-    :returns: Either, a full or a grown tree.
-    """
-    method = random.choice((genGrow, genFull))
-    return method(pset, min_, max_, type_)
- */
-fun <R> genHalfAndHalf(pset: PSet<R>, min: Int, max: Int, type: KType): BaseTreeNode<*> {
-    if (Random.nextFloat() < 0.5) {
-        return genGrow(pset, min, max, type)
-    }
-    return genFull(pset, min, max, type)
-}
 
 /*
 ######################################
@@ -176,20 +69,21 @@ def mutUniform(individual, expr, pset):
     return individual,
  */
 
-fun mutUniform(treeNode: BaseTreeNode<*>, expr: (KType) -> BaseTreeNode<*>): BaseTreeNode<*>? {
-    val allSub = treeNode.iterateAll()
-    if (allSub.size == 0) {
-        return null
+    fun mutUniform(treeNode: BaseTreeNode<*>, expr: (KType) -> BaseTreeNode<*>): BaseTreeNode<*>? {
+        val allSub = treeNode.iterateAll()
+        if (allSub.size == 0) {
+            return null
+        }
+        val selected = randomChoice(allSub);
+        val returnType = selected.returnType
+        val generated = expr(returnType)
+        if (generated.returnType != returnType) {
+            throw Exception("unexpected return type")
+        }
+        return treeNode.replaceChild(selected, generated)
     }
-    val selected = randomChoice(allSub);
-    val returnType = selected.returnType
-    val generated = expr(returnType)
-    if (generated.returnType != returnType) {
-        throw Exception("unexpected return type")
-    }
-    return treeNode.replaceChild(selected, generated)
+
+
+
+
 }
-
-
-
-

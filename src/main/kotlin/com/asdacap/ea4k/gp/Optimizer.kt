@@ -8,41 +8,38 @@ import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
  */
 typealias TreeOptimizer<R> = (BaseTreeNode<R>) -> BaseTreeNode<R>
 
-/**
- * Optimize tree for execution
- * This will first, recursively call optimizeTree on its children,
- * Then it will attempt to transform the tree to a constant
- * Then it will call the treeNode's optimizeForEvaluation
- */
-fun <R> optimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
-    return doOptimizeForEvaluation(root)
-}
-
-private fun <R> doOptimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
-    val root = root.replaceChildren(root.children.map { treeNode ->
-        doOptimizeForEvaluation(treeNode)
-    })
-    val constantNode = optimizeConstants(root)
-    if (constantNode!=null) {
-        return constantNode
-    }
-    val tree = root.optimizeForEvaluation()
-    if (tree != null) {
-        return tree
-    }
-    return root
-}
-
-/**
- * A tree can be autoshake if its subtree is pure.
- * It just evaluate itself, and got replaced by a constant tree node.
- */
-fun <R> optimizeConstants(tree: BaseTreeNode<R>): BaseTreeNode<R>? {
-    if (!tree.isSubtreeConstant || tree.children.isEmpty()){
-        return null
+object Optimizer {
+    /**
+     * Optimize tree for execution
+     * This will first, recursively call optimizeTree on its children,
+     * Then it will attempt to transform the tree to a constant
+     * Then it will call the treeNode's optimizeForEvaluation
+     */
+    fun <R> optimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
+        return doOptimizeForEvaluation(root)
     }
 
-    val value = tree.call(CallCtx(arrayOf()))
-    return createConstantTreeNode(value)
-}
+    private fun <R> doOptimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
+        val root = root.replaceChildren(root.children.map { treeNode ->
+            doOptimizeForEvaluation(treeNode)
+        })
+        val constantNode = optimizeConstants(root)
+        if (constantNode!=null) {
+            return constantNode
+        }
+        return root.optimizeForEvaluation()
+    }
 
+    /**
+     * A tree can be autoshake if its subtree is pure.
+     * It just evaluate itself, and got replaced by a constant tree node.
+     */
+    fun <R> optimizeConstants(tree: BaseTreeNode<R>): BaseTreeNode<R>? {
+        if (!tree.isSubtreeConstant || tree.children.isEmpty()){
+            return null
+        }
+
+        val value = tree.call(CallCtx(arrayOf()))
+        return createConstantTreeNode(value)
+    }
+}
