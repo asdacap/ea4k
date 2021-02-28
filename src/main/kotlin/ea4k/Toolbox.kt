@@ -3,17 +3,18 @@ package ea4k
 import java.util.stream.Collectors
 
 /**
- * Basically its a collection of configuration
- * that algorithms typically use
+ * Basically its a collection of configuration that algorithms typically use
+ * Both individual and fitness is expected to be immutable
+ *
+ * I for Individual
+ * F for Fitness
  */
-interface Toolbox<I : Individual<F>, F> {
-    // Evaluate the individual
-    fun evaluate(individual: I): F
+interface Toolbox<I, F> {
+    // Evaluate the individual. Return null if invalid.
+    // What happen to invalid individual depends on the selector
+    fun evaluate(individual: I): F?
 
-    // Clone the individual
-    fun clone(it: I): I
-
-    fun select(list: List<I>, k: Int): List<I>
+    fun select(list: List<IndividualWithFitness<I, F>>, k: Int): List<IndividualWithFitness<I, F>>
 
     fun mate(individual: I, individual2: I): Pair<I, I>
 
@@ -28,5 +29,5 @@ interface Toolbox<I : Individual<F>, F> {
     }
 
     // Callback to be called on each generation
-    fun onGeneration(population: List<I>)
+    fun onGeneration(population: List<IndividualWithFitness<I, F>>)
 }

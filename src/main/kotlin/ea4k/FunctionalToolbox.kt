@@ -3,23 +3,18 @@ package ea4k
 /**
  * Toolbox where each member implementation is given by a function
  */
-class FunctionalToolbox<I: Individual<F>, F>(
-    val evaluateFn: (I) -> F,
-    val cloneFn: (I) -> I,
-    val selectFn: (List<I>, Int) -> List<I>,
+class FunctionalToolbox<I, F>(
+    val evaluateFn: (I) -> F?,
+    val selectFn: (List<IndividualWithFitness<I,F>>, Int) -> List<IndividualWithFitness<I, F>>,
     val mateFn: (I, I) -> Pair<I, I>,
     val mutateFn: (I) -> I,
-    val onGenerationFn: (List<I>) -> Unit = {},
+    val onGenerationFn: (List<IndividualWithFitness<I, F>>) -> Unit = {},
 ): Toolbox<I, F> {
-    override fun evaluate(individual: I): F {
+    override fun evaluate(individual: I): F? {
         return evaluateFn(individual)
     }
 
-    override fun clone(it: I): I {
-        return cloneFn(it)
-    }
-
-    override fun select(list: List<I>, k: Int): List<I> {
+    override fun select(list: List<IndividualWithFitness<I, F>>, k: Int): List<IndividualWithFitness<I, F>> {
         return selectFn(list, k)
     }
 
@@ -31,15 +26,14 @@ class FunctionalToolbox<I: Individual<F>, F>(
         return mutateFn(it)
     }
 
-    override fun onGeneration(population: List<I>) {
+    override fun onGeneration(population: List<IndividualWithFitness<I, F>>) {
         return onGenerationFn(population)
     }
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withEvaluate(evaluateFn: (I) -> F): FunctionalToolbox<I, F> {
+fun <I, F> Toolbox<I, F>.withEvaluate(evaluateFn: (I) -> F): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         evaluateFn,
-        this::clone,
         this::select,
         this::mate,
         this::mutate,
@@ -47,21 +41,9 @@ fun <I: Individual<F>, F> Toolbox<I, F>.withEvaluate(evaluateFn: (I) -> F): Func
     )
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withClone(cloneFn: (I) -> I): FunctionalToolbox<I, F> {
+fun <I, F> Toolbox<I, F>.withSelect(selectFn: (List<IndividualWithFitness<I, F>>, Int) -> List<IndividualWithFitness<I, F>>): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         this::evaluate,
-        cloneFn,
-        this::select,
-        this::mate,
-        this::mutate,
-        this::onGeneration,
-    )
-}
-
-fun <I: Individual<F>, F> Toolbox<I, F>.withSelect(selectFn: (List<I>, Int) -> List<I>): FunctionalToolbox<I, F> {
-    return FunctionalToolbox(
-        this::evaluate,
-        this::clone,
         selectFn,
         this::mate,
         this::mutate,
@@ -69,10 +51,9 @@ fun <I: Individual<F>, F> Toolbox<I, F>.withSelect(selectFn: (List<I>, Int) -> L
     )
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withMate(mateFn: (I, I) -> Pair<I, I>): FunctionalToolbox<I, F> {
+fun <I, F> Toolbox<I, F>.withMate(mateFn: (I, I) -> Pair<I, I>): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         this::evaluate,
-        this::clone,
         this::select,
         mateFn,
         this::mutate,
@@ -80,10 +61,9 @@ fun <I: Individual<F>, F> Toolbox<I, F>.withMate(mateFn: (I, I) -> Pair<I, I>): 
     )
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withMutate(mutateFn: (I) -> I): FunctionalToolbox<I, F> {
+fun <I, F> Toolbox<I, F>.withMutate(mutateFn: (I) -> I): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         this::evaluate,
-        this::clone,
         this::select,
         this::mate,
         mutateFn,
@@ -91,10 +71,9 @@ fun <I: Individual<F>, F> Toolbox<I, F>.withMutate(mutateFn: (I) -> I): Function
     )
 }
 
-fun <I: Individual<F>, F> Toolbox<I, F>.withOnGeneration(onGenerationFn: (List<I>) -> Unit): FunctionalToolbox<I, F> {
+fun <I, F> Toolbox<I, F>.withOnGeneration(onGenerationFn: (List<IndividualWithFitness<I, F>>) -> Unit): FunctionalToolbox<I, F> {
     return FunctionalToolbox(
         this::evaluate,
-        this::clone,
         this::select,
         this::mate,
         this::mutate,

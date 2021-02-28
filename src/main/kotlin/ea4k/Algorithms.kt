@@ -32,13 +32,13 @@ import kotlin.random.Random
     shall be in :math:`[0, 1]`, the reproduction probability is
     1 - *cxpb* - *mutpb*.
  */
-fun <I: Individual<F>, F> varOr(
-    population: List<I>,
+fun <I, F> varOr(
+    population: List<IndividualWithFitness<I, F>>,
     toolbox: Toolbox<I, F>,
     lambda_: Int,
     cxpb: Float,
     mutpb: Float
-): List<I> {
+): List<IndividualWithFitness<I, F>> {
     check(cxpb + mutpb <= 1.0f, { "The sum of the crossover and mutation probabilities must be smaller or equal to 1.0." })
 
     return (0..lambda_).let {
@@ -46,16 +46,16 @@ fun <I: Individual<F>, F> varOr(
             val opChoice = Random.nextFloat()
             if (opChoice < cxpb) {
                 // Crossover
-                val rand1 = toolbox.clone(population[Random.nextInt(0, population.size)])
-                val rand2 = toolbox.clone(population[Random.nextInt(0, population.size)])
-                toolbox.mate(rand1, rand2).first
+                val rand1 = population[Random.nextInt(0, population.size)]
+                val rand2 = population[Random.nextInt(0, population.size)]
+                IndividualWithFitness(toolbox.mate(rand1.individual, rand2.individual).first, null)
             } else if (opChoice < cxpb + mutpb) {
                 // Mutation
-                val ind = toolbox.clone(population[Random.nextInt(0, population.size)])
-                toolbox.mutate(ind)
+                val ind = population[Random.nextInt(0, population.size)]
+                IndividualWithFitness(toolbox.mutate(ind.individual), null)
             } else {
                 // Reproduction
-                toolbox.clone(population[Random.nextInt(0, population.size)])
+                population[Random.nextInt(0, population.size)]
             }
         }, it.toList())
     }
@@ -93,43 +93,49 @@ fun <I: Individual<F>, F> varOr(
     according to the given probabilities. Both probabilities should be in
     :math:`[0, 1]`.
  */
-fun <I: Individual<F>, F> varAnd(
-    population: List<I>,
+fun <I, F> varAnd(
+    population: List<IndividualWithFitness<I, F>>,
     toolbox: Toolbox<I, F>,
     cxpb: Float,
     mutpb: Float
-): List<I> {
-    val cloned = toolbox.map(toolbox::clone, population).toMutableList()
+): List<IndividualWithFitness<I, F>> {
+    val asMut = population.toMutableList()
 
-    (0..(cloned.size-2) step 2).forEach{
+    (0..(asMut.size-2) step 2).forEach{
         if (Random.nextFloat() < cxpb) {
-            val (m1, m2) = toolbox.mate(cloned[it], cloned[it+1])
-            cloned[it] = m1
-            cloned[it+1] = m2
+            val (m1, m2) = toolbox.mate(asMut[it].individual, asMut[it+1].individual)
+            asMut[it] = IndividualWithFitness(m1, null)
+            asMut[it+1] = IndividualWithFitness(m2, null)
         }
     }
 
-    (0..(cloned.size-1)).forEach{
+    (0..(asMut.size-1)).forEach{
         if (Random.nextFloat() < mutpb) {
-            val m1 = toolbox.mutate(cloned[it])
-            cloned[it] = m1
+            val m1 = toolbox.mutate(asMut[it].individual)
+            asMut[it] = IndividualWithFitness(m1, null)
         }
     }
 
-    return cloned
+    return asMut
 }
 
-// Evaluate the individuals with an invalid fitness
-fun <I: Individual<F>, F> evaluateInvalid(population: List<I>, toolbox: Toolbox<I, F>) {
+// Evaluate the individual pair with an invalid fitness
+fun <I, F> evaluateInvalid(population: List<IndividualWithFitness<I, F>>, toolbox: Toolbox<I, F>): List<IndividualWithFitness<I, F>> {
+    val asMut = population.toMutableList()
+
     // Evaluate the individuals with an invalid fitness
-    val invalidIndividual = population.filter {
-        it.fitness == null
+    val invalidIndividual = asMut.mapIndexed { idx, it ->
+        idx to it
+    }.filter {
+        it.second.fitness == null
     }
 
-    toolbox.map(toolbox::evaluate, invalidIndividual)
+    toolbox.map(toolbox::evaluate, invalidIndividual.map { it.second.individual })
         .zip(invalidIndividual).forEach {
-            it.second.fitness = it.first
+            asMut[it.second.first] = IndividualWithFitness(it.second.second.individual, it.first)
         }
+
+    return asMut
 }
 
 /*
@@ -174,19 +180,19 @@ fun <I: Individual<F>, F> evaluateInvalid(population: List<I>, toolbox: Toolbox<
     registered in the toolbox. This algorithm uses the :func:`varOr`
     variation.
 */
-fun <I: Individual<F>, F> eaMuPlusLambda(
-    population: List<I>,
+fun <I, F> eaMuPlusLambda(
+    population: List<IndividualWithFitness<I, F>>,
     toolbox: Toolbox<I, F>,
     mu: Int,
     lambda_: Int,
     cxpb: Float,
     mutpb: Float,
     ngen: Int
-): List<I> {
+): List<IndividualWithFitness<I, F>> {
 
     var population = population
 
-    evaluateInvalid(population, toolbox)
+    population = evaluateInvalid(population, toolbox)
 
     toolbox.onGeneration(population)
 
@@ -259,25 +265,17 @@ fun <I: Individual<F>, F> eaMuPlusLambda(
     .. [Back2000] Back, Fogel and Michalewicz, "Evolutionary Computation 1 :
        Basic Algorithms and Operators", 2000.
 */
-fun <I: Individual<F>, F> eaSimple(
-    population: List<I>,
+fun <I, F> eaSimple(
+    population: List<IndividualWithFitness<I, F>>,
     toolbox: Toolbox<I, F>,
     cxpb: Float,
     mutpb: Float,
     ngen: Int
-): List<I> {
+): List<IndividualWithFitness<I, F>> {
     var population = population
 
     // Evaluate the individuals with an invalid fitness
-    val invalidIndividual = population.filter {
-        it.fitness == null
-    }
-
-    val fitnesses = toolbox.map(toolbox::evaluate, invalidIndividual)
-    fitnesses.zip(invalidIndividual).forEach {
-        it.second.fitness = it.first
-    }
-    evaluateInvalid(population, toolbox)
+    population = evaluateInvalid(population, toolbox)
 
     toolbox.onGeneration(population)
 
@@ -348,26 +346,19 @@ def eaMuCommaLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
     variation.
     """
     */
-fun <I: Individual<F>, F> eaMuCommaLambda(
-    population: List<I>,
+fun <I, F> eaMuCommaLambda(
+    population: List<IndividualWithFitness<I, F>>,
     toolbox: Toolbox<I, F>,
     mu: Int,
     lambda_: Int,
     cxpb: Float,
     mutpb: Float,
     ngen: Int
-): List<I> {
+): List<IndividualWithFitness<I, F>> {
     check(lambda_ >= mu, { "lambda must be greater or equal to mu." })
 
     var population = population
-    val invalidIndividual = population.filter {
-        it.fitness == null
-    }
-
-    val fitnesses = toolbox.map(toolbox::evaluate, invalidIndividual)
-    fitnesses.zip(invalidIndividual).forEach {
-        it.second.fitness = it.first
-    }
+    population = evaluateInvalid(population, toolbox)
 
     toolbox.onGeneration(population)
 
