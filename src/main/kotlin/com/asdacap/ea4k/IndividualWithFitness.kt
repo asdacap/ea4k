@@ -1,4 +1,4 @@
-package ea4k;
+package com.asdacap.ea4k;
 
 /**
  * Individual-Fitness pair

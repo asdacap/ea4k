@@ -1,4 +1,4 @@
-package ea4k
+package com.asdacap.ea4k
 
 import java.lang.Integer.min
 import kotlin.random.Random

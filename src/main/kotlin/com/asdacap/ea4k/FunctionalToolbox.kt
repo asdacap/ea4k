@@ -1,4 +1,4 @@
-package ea4k
+package com.asdacap.ea4k
 
 /**
  * Toolbox where each member implementation is given by a function

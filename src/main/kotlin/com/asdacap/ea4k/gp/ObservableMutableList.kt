@@ -1,4 +1,4 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
 /**
  * Utility class to create a MutableList with an onChange handler.

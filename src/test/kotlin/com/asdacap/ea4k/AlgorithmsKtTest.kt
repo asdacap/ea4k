@@ -1,4 +1,4 @@
-package ea4k
+package com.asdacap.ea4k
 
 import org.junit.jupiter.api.Test
 import kotlin.random.Random.Default.nextFloat

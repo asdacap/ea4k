@@ -1,7 +1,7 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
-import ea4k.gp.FromFuncTreeNodeFactory.Companion.fromArgs
-import ea4k.gp.Utils.createConstantTreeNode
+import com.asdacap.ea4k.gp.FromFuncTreeNodeFactory.Companion.fromArgs
+import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf

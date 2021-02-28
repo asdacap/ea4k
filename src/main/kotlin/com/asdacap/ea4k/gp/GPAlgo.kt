@@ -1,6 +1,6 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
-import ea4k.gp.Utils.randomChoice
+import com.asdacap.ea4k.Utils.randomChoice
 import kotlin.random.Random
 import kotlin.reflect.KType
 

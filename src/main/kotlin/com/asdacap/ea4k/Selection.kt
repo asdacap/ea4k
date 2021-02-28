@@ -1,7 +1,6 @@
-package ea4k
+package com.asdacap.ea4k
 
-import ea4k.gp.Utils.randomChoice
-
+import com.asdacap.ea4k.Utils.randomChoice
 
 /*
     Select the best individual among *tournsize* randomly chosen

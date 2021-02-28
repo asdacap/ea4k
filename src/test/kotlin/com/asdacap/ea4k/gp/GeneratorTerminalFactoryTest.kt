@@ -1,4 +1,4 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions
