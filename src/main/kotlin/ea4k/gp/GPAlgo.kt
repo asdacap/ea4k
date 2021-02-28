@@ -1,4 +1,5 @@
-import ea4k.gp.*
+package ea4k.gp
+
 import ea4k.gp.Utils.randomChoice
 import ea4k.gp.Utils.randomChoiceLastBiased
 import kotlin.random.Random
