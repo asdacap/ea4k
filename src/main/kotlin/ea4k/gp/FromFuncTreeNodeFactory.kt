@@ -98,19 +98,12 @@ class FromFuncTreeNodeFactory <R>(
     class TreeNode <R>(
         val func: (CallCtx, Array<BaseTreeNode<*>>) -> R,
         override val returnType: KType,
-        startingChildren: List<BaseTreeNode<*>>,
+        override val children: List<BaseTreeNode<*>>,
         private val treeOptimizer: TreeOptimizer<R> = { it },
         override val isPure: Boolean = true
     ) : BaseTreeNode<R>() {
 
-        var childArray = startingChildren.toTypedArray()
-        lateinit override var children: MutableList<BaseTreeNode<*>>;
-
-        init {
-            children = ObservableMutableList({
-                childArray = this.children.toTypedArray()
-            }, startingChildren)
-        }
+        var childArray = children.toTypedArray()
 
         override fun call(ctx: CallCtx): R {
             return func.invoke(ctx, childArray)
@@ -127,6 +120,10 @@ class FromFuncTreeNodeFactory <R>(
 
         override fun optimizeForEvaluation(): BaseTreeNode<R> {
             return treeOptimizer(this)
+        }
+
+        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<R> {
+            return TreeNode(func, returnType, newChildren, treeOptimizer, isPure)
         }
     }
 }

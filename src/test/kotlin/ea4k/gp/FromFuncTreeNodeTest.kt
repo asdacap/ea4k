@@ -8,7 +8,7 @@ import kotlin.reflect.typeOf
 
 class FromFuncTreeNodeTest {
 
-    class TestNodeType(val value: Int, override val children: MutableList<BaseTreeNode<*>>): BaseTreeNode<Int>() {
+    class TestNodeType(val value: Int, override val children: List<BaseTreeNode<*>>): BaseTreeNode<Int>() {
 
         override fun call(ctx: CallCtx): Int {
             return value
@@ -23,6 +23,10 @@ class FromFuncTreeNodeTest {
         }
 
         override val returnType: KType = typeOf<Int>()
+
+        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<Int> {
+            return TestNodeType(value, newChildren)
+        }
     }
 
     @Nested

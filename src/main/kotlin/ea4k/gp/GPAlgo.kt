@@ -89,13 +89,6 @@ fun getReturnType(pair: Pair<BaseTreeNode<*>, Int>): KType {
     return pair.first.children[pair.second].returnType;
 }
 
-fun swapTree(pair: Pair<BaseTreeNode<*>, Int>, pair2: Pair<BaseTreeNode<*>, Int>) {
-    val node1 = pair.first.children[pair.second]
-    val node2 = pair2.first.children[pair2.second]
-    pair.first.children[pair.second] = node2
-    pair2.first.children[pair2.second] = node1
-}
-
 fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNode<R>, BaseTreeNode<R>> {
     """Randomly select crossover point in each individual and exchange each
     subtree with the point as root between each individual.
@@ -109,18 +102,18 @@ fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNod
         return Pair(tr1, tr2)
     }
 
-    val tr1TypeMap: MutableMap<KType, MutableList<Pair<BaseTreeNode<*>, Int>> > = mutableMapOf()
-    val tr2TypeMap: MutableMap<KType, MutableList<Pair<BaseTreeNode<*>, Int>> > = mutableMapOf()
+    val tr1TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
+    val tr2TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
     val tr1Types: MutableSet<KType> = mutableSetOf();
     val tr2Types: MutableSet<KType> = mutableSetOf();
 
-    tr1.iterateAllWithParentAndIndex().forEach {
-        tr1TypeMap.getOrPut(getReturnType(it), { mutableListOf() }).add(it)
-        tr1Types.add(getReturnType(it))
+    tr1.iterateAll().forEach {
+        tr1TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
+        tr1Types.add(it.returnType)
     }
-    tr2.iterateAllWithParentAndIndex().forEach {
-        tr2TypeMap.getOrPut(getReturnType(it), { mutableListOf() }).add(it)
-        tr2Types.add(getReturnType(it))
+    tr2.iterateAll().forEach {
+        tr2TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
+        tr2Types.add(it.returnType)
     }
 
     val commonTypes = tr1Types.intersect(tr2Types)
@@ -128,11 +121,14 @@ fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNod
     if (commonTypes.size > 0) {
         val chosenType = randomChoice(commonTypes.toList());
 
-        val tr1Idx = randomChoiceLastBiased(tr1TypeMap[chosenType]!!)
-        val tr2Idx = randomChoiceLastBiased(tr2TypeMap[chosenType]!!)
+        val tr1Idx = randomChoice(tr1TypeMap[chosenType]!!)
+        val tr2Idx = randomChoice(tr2TypeMap[chosenType]!!)
 
         // This does mean that the top level node can never be swapped
-        swapTree(tr1Idx, tr2Idx)
+        return Pair(
+            tr1.withDescendantReplaced(tr1Idx, tr2Idx) as BaseTreeNode<R>,
+            tr2.withDescendantReplaced(tr2Idx, tr1Idx) as BaseTreeNode<R>
+        )
     }
 
     return Pair(tr1, tr2)
@@ -182,18 +178,17 @@ def mutUniform(individual, expr, pset):
  */
 
 fun mutUniform(treeNode: BaseTreeNode<*>, expr: (KType) -> BaseTreeNode<*>): BaseTreeNode<*>? {
-    val allSub = treeNode.iterateAllWithParentAndIndex()
+    val allSub = treeNode.iterateAll()
     if (allSub.size == 0) {
         return null
     }
-    val selected = randomChoiceLastBiased(allSub);
-    val returnType = getReturnType(selected)
+    val selected = randomChoice(allSub);
+    val returnType = selected.returnType
     val generated = expr(returnType)
     if (generated.returnType != returnType) {
         throw Exception("unexpected return type")
     }
-    selected.first.children[selected.second] = generated
-    return treeNode
+    return treeNode.withDescendantReplaced(selected, generated)
 }
 
 

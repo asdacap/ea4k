@@ -22,4 +22,8 @@ class RootTreeNode<R>(child: BaseTreeNode<R>) : BaseTreeNode<R>() {
     override fun optimizeForEvaluation(): BaseTreeNode<R> {
         return children[0] as BaseTreeNode<R>
     }
+
+    override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<R> {
+        return RootTreeNode(newChildren[0]) as BaseTreeNode<R>
+    }
 }

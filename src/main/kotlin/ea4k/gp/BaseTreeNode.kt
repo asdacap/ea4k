@@ -5,6 +5,7 @@ import kotlin.reflect.KType
 /**
  * The tree node itself.
  * This is what gets cloned and called.
+ * A tree node should be immmutable
  */
 abstract class BaseTreeNode<out R> {
     /**
@@ -12,7 +13,7 @@ abstract class BaseTreeNode<out R> {
      * The items may get replaced at any time, so subclass may want to avoid storing children separately
      * Subclass may want to override this and provide a custom list for special handling
      */
-    open val children: MutableList<BaseTreeNode<*>> = mutableListOf()
+    open val children: List<BaseTreeNode<*>> = listOf()
 
     /**
      * Return true of this tree node type will always return the same result if its children always
@@ -23,10 +24,7 @@ abstract class BaseTreeNode<out R> {
     /**
      * Kinda same as isPure, but for all its subtree.
      */
-    val isSubtreeConstant: Boolean
-        get() {
-            return isPure && children.all { it.isSubtreeConstant }
-        }
+    val isSubtreeConstant: Boolean by lazy { isPure && children.all { it.isSubtreeConstant } }
 
     /**
      * Get the returnType of this tree node
@@ -44,6 +42,24 @@ abstract class BaseTreeNode<out R> {
      * Clone this treeNode. This method is also responsible for cloning its's children.
      */
     abstract fun clone(): BaseTreeNode<R>
+
+    /**
+     * Create a copy of this treeNode with its children replaced
+     */
+    abstract fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<out R>
+
+    /**
+     * Create a copy of this treeNode with its children on the particular index swapped
+     */
+    open fun replaceChildren(index: Int, replaceWith: BaseTreeNode<*>): BaseTreeNode<out R> {
+        return replaceChildren(children.mapIndexed { cIndex, baseTreeNode ->
+            if (cIndex == index) {
+                replaceWith
+            } else {
+                baseTreeNode
+            }
+        })
+    }
 
     /**
      * Create a new tree that is optimized for evaluation. The resulting tree may not need be
@@ -90,14 +106,27 @@ abstract class BaseTreeNode<out R> {
         return result
     }
 
+    fun iterateAll(): List<BaseTreeNode<*>> {
+        return iterateDfs2(mutableSetOf())
+    }
+
+    private fun iterateDfs2(dedup: MutableSet<BaseTreeNode<*>>): List<BaseTreeNode<*>> {
+        if (dedup.contains(this)) {
+            throw Exception("Cycle detected!")
+        }
+        dedup.add(this)
+        val result = children.flatMap { it.iterateDfs2(dedup) } +
+                children.map { tree ->
+                    tree
+                }
+        dedup.remove(this)
+        return result
+    }
+
     /**
      * Return the size of this subTree
      */
-    val size: Int
-        get() {
-            val nodeSet: MutableSet<BaseTreeNode<*>> = mutableSetOf()
-            return getSizeDfs(nodeSet, this)
-        }
+    val size: Int by lazy { getSizeDfs(mutableSetOf(), this) }
 
     fun getSizeDfs(nodeSet: MutableSet<BaseTreeNode<*>>, treeNode: BaseTreeNode<*>): Int {
         if (nodeSet.contains(treeNode)) {
@@ -113,4 +142,28 @@ abstract class BaseTreeNode<out R> {
         }
         return super.equals(other)
     }
+}
+
+fun BaseTreeNode<*>.withDescendantReplaced(toReplace: BaseTreeNode<*>, replaceWith: BaseTreeNode<*>): BaseTreeNode<*> {
+    if (this === toReplace) {
+        return replaceWith
+    }
+
+    // This does mean that only one replacement is done
+    var replaced = false
+    val newChilds = children.map {
+        if (replaced) {
+            it
+        } else {
+            val newChild = it.withDescendantReplaced(toReplace, replaceWith)
+            if (newChild !== it) {
+                replaced = true
+            }
+            newChild
+        }
+    }
+    if (replaced) {
+        return replaceChildren(newChilds)
+    }
+    return this
 }

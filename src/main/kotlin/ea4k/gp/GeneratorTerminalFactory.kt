@@ -43,6 +43,10 @@ class GeneratorTerminalFactory<R: Any>(val generator: () -> R, override val retu
         override fun isNodeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean {
             return otherTree is TreeNode && otherTree.constant == constant
         }
+
+        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<R> {
+            return TreeNode(constant, generator)
+        }
     }
 
     override val args: List<KType> = listOf()

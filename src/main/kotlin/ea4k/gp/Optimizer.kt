@@ -15,14 +15,13 @@ typealias TreeOptimizer<R> = (BaseTreeNode<R>) -> BaseTreeNode<R>
  * Then it will call the treeNode's optimizeForEvaluation
  */
 fun <R> optimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
-    val cloned = root.clone()
-    return doOptimizeForEvaluation(cloned)
+    return doOptimizeForEvaluation(root)
 }
 
 private fun <R> doOptimizeForEvaluation(root: BaseTreeNode<R>): BaseTreeNode<R> {
-    root.children.forEachIndexed { index, treeNode ->
-        root.children[index] = doOptimizeForEvaluation(treeNode)
-    }
+    val root = root.replaceChildren(root.children.map { treeNode ->
+        doOptimizeForEvaluation(treeNode)
+    })
     val constantNode = optimizeConstants(root)
     if (constantNode!=null) {
         return constantNode
