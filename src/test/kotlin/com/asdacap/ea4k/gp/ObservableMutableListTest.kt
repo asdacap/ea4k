@@ -1,4 +1,4 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

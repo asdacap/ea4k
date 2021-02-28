@@ -1,4 +1,4 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -19,10 +19,8 @@ class PSet<R>(val returnType: KType, args: List<KType>) {
     val terminals: MutableMap<KType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
     val primitives: MutableMap<KType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
     val serializers: MutableList<Pair<String, TreeNodeFactory<*>>> = mutableListOf()
-    val rootTreeNodeFactory = RootTreeNodeFactory<R>(returnType)
 
     init {
-        serializers.add("root" to rootTreeNodeFactory)
         args.forEachIndexed{ i, it ->
             addTerminal("ARG"+i.toString(), FromFuncTreeNodeFactory.fromArgs<Any>(i, it))
         }
@@ -101,10 +99,6 @@ class PSet<R>(val returnType: KType, args: List<KType>) {
 
         val nodeInfo = jsonNode.get("node") ?: objectMapper.createObjectNode()
         return factory.second.deserialize(nodeInfo, children)
-    }
-
-    fun wrapAsRoot(treeGen: BaseTreeNode<*>): BaseTreeNode<*> {
-        return rootTreeNodeFactory.createNode(listOf(treeGen))
     }
 }
 

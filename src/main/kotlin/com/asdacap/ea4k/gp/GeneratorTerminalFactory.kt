@@ -1,4 +1,4 @@
-package ea4k.gp
+package com.asdacap.ea4k.gp
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -32,16 +32,16 @@ class GeneratorTerminalFactory<R: Any>(val generator: () -> R, override val retu
     class TreeNode<R>(val constant: R, val generator: () -> R): BaseTreeNode<R>() {
         override val returnType: KType = constant!!::class.createType()
 
-        override fun clone(): BaseTreeNode<R> {
-            return TreeNode(constant, generator)
-        }
-
         override fun call(ctx: CallCtx): R {
             return constant
         }
 
         override fun isNodeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean {
             return otherTree is TreeNode && otherTree.constant == constant
+        }
+
+        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<R> {
+            return TreeNode(constant, generator)
         }
     }
 
