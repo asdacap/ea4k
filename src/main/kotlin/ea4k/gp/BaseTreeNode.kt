@@ -108,13 +108,6 @@ abstract class BaseTreeNode<out R> {
         nodeSet.add(treeNode)
         return treeNode.children.map { getSizeDfs(nodeSet, it) }.sum() + 1
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (other is BaseTreeNode<*>) {
-            return isSubtreeEffectivelySame(other)
-        }
-        return super.equals(other)
-    }
 }
 
 fun BaseTreeNode<*>.replaceChild(toReplace: BaseTreeNode<*>, replaceWith: BaseTreeNode<*>): BaseTreeNode<*> {
