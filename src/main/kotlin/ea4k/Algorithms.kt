@@ -48,11 +48,11 @@ fun <I, F> varOr(
                 // Crossover
                 val rand1 = population[Random.nextInt(0, population.size)]
                 val rand2 = population[Random.nextInt(0, population.size)]
-                IndividualWithFitness(toolbox.mate(rand1.individual, rand2.individual).first, null)
+                toolbox.mateWithFitness(rand1, rand2).first
             } else if (opChoice < cxpb + mutpb) {
                 // Mutation
                 val ind = population[Random.nextInt(0, population.size)]
-                IndividualWithFitness(toolbox.mutate(ind.individual), null)
+                toolbox.mutateWithFitness(ind)
             } else {
                 // Reproduction
                 population[Random.nextInt(0, population.size)]
@@ -103,16 +103,16 @@ fun <I, F> varAnd(
 
     (0..(asMut.size-2) step 2).forEach{
         if (Random.nextFloat() < cxpb) {
-            val (m1, m2) = toolbox.mate(asMut[it].individual, asMut[it+1].individual)
-            asMut[it] = IndividualWithFitness(m1, null)
-            asMut[it+1] = IndividualWithFitness(m2, null)
+            val (m1, m2) = toolbox.mateWithFitness(asMut[it], asMut[it+1])
+            asMut[it] = m1
+            asMut[it+1] = m2
         }
     }
 
     (0..(asMut.size-1)).forEach{
         if (Random.nextFloat() < mutpb) {
-            val m1 = toolbox.mutate(asMut[it].individual)
-            asMut[it] = IndividualWithFitness(m1, null)
+            val m1 = toolbox.mutateWithFitness(asMut[it])
+            asMut[it] = m1
         }
     }
 

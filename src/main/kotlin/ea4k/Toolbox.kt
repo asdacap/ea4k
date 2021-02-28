@@ -23,7 +23,24 @@ interface Toolbox<I, F> {
 
     fun mate(individual: I, individual2: I): Pair<I, I>
 
+    // A simpler interface for the algorithms. Also check if the input does not change, and preserve the fitness in that case
+    fun mateWithFitness(individual: IndividualWithFitness<I, F>, individual2: IndividualWithFitness<I, F>): Pair<IndividualWithFitness<I, F>, IndividualWithFitness<I, F>> {
+        val (ni1, ni2) = mate(individual.individual, individual2.individual)
+
+        return (if (ni1 === individual.individual) { individual } else { IndividualWithFitness(ni1, null as F) }) to
+                (if (ni2 === individual2.individual) { individual2 } else { IndividualWithFitness(ni2, null as F) })
+    }
+
     fun mutate(it: I): I
+
+    // A simpler interface for the algorithms. Also check if the input does not change, and preserve the fitness in that case
+    fun mutateWithFitness(individual: IndividualWithFitness<I, F>): IndividualWithFitness<I, F> {
+        val mutated = mutate(individual.individual)
+        if (mutated === individual.individual) {
+            return individual
+        }
+        return IndividualWithFitness(mutated, null)
+    }
 
     // Mapper is main multithreading entry point
     fun <T, R> map(mapper: (T) -> R, items: List<T>): List<R> {
