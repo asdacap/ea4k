@@ -1,6 +1,5 @@
 package com.asdacap.ea4k.gp
 
-import com.asdacap.ea4k.gp.FromFuncTreeNodeFactory.Companion.fromArgs
 import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -12,22 +11,16 @@ class FromFuncTreeNodeFactoryTest {
         return n1 + n2
     }
 
-    fun lazyPrimitive(callCtx: CallCtx, children: Array<BaseTreeNode<*>>): Int {
+    fun lazyPrimitive(input: Array<Any>): Int {
         return 0
     }
 
     @Test
     fun testBasicFunctionCall() {
-        val arg1Factory = fromArgs<Int>(0)
-        val arg2Factory = fromArgs<Int>(1)
-        val arg1 = arg1Factory.createNode(listOf())
-        val arg2 = arg2Factory.createNode(listOf())
-        val ctx = CallCtx(arrayOf(2, 3))
-
         val factory = FromFuncTreeNodeFactory.fromFunction(this::primitive)
-        assertEquals(typeOf<Int>(), factory.returnType)
-        val node = factory.createNode(listOf(arg1, arg2))
-        assertEquals(node.call(ctx), 5)
+        assertEquals(KotlinNodeType(typeOf<Int>()), factory.returnType)
+        val node = factory.createNode(listOf(createConstantTreeNode(2), createConstantTreeNode(3)))
+        assertEquals(node.call(), 5)
     }
 
     @Test
@@ -39,79 +32,46 @@ class FromFuncTreeNodeFactoryTest {
     @Test
     fun testMainConstructorDetectReturnTypeCorrectly() {
         val factory = FromFuncTreeNodeFactory(::lazyPrimitive, listOf())
-        assertEquals(typeOf<Int>(), factory.returnType)
+        assertEquals(KotlinNodeType(typeOf<Int>()), factory.returnType)
     }
 
     @Test
     fun testMainConstructorDetectReturnTypeCorrectlyWithClosure() {
-        val factory = FromFuncTreeNodeFactory({ ctx, childs ->
+        val factory = FromFuncTreeNodeFactory({ inputs ->
             1f
         }, listOf())
-        assertEquals(typeOf<Float>(), factory.returnType)
+        assertEquals(KotlinNodeType(typeOf<Float>()), factory.returnType)
     }
 
     @Test
     fun testConstantDetectReturnTypeCorrectly() {
         val factory = FromFuncTreeNodeFactory.fromConstant(true)
-        assertEquals(typeOf<Boolean>(), factory.returnType)
-    }
-
-    @Test
-    fun testArgsIsNotPure() {
-        val factory = fromArgs<Any>(0, typeOf<Int>())
-        val node = factory.createNode(listOf())
-        assertFalse(node.isPure)
-        assertFalse(node.isSubtreeConstant)
+        assertEquals(KotlinNodeType(typeOf<Boolean>()), factory.returnType)
     }
 
     @Test
     fun testReplaceNode() {
-        val arg1Factory = fromArgs<Int>(0)
-        val arg2Factory = fromArgs<Int>(1)
-        val arg3Factory = fromArgs<Int>(2)
-        val arg1 = arg1Factory.createNode(listOf())
-        val arg2 = arg2Factory.createNode(listOf())
-        val arg3 = arg3Factory.createNode(listOf())
+        val arg1 = createConstantTreeNode(2)
+        val arg2 = createConstantTreeNode(3)
+        val arg3 = createConstantTreeNode(4)
 
         val factory = FromFuncTreeNodeFactory.fromFunction(this::primitive)
         val node = factory.createNode(listOf(arg1, arg2))
         val node2 = factory.createNode(listOf(node, arg3))
 
-        assertEquals(9, node2.call(CallCtx(arrayOf(2, 3, 4))))
-        assertEquals(10, node2.replaceChild(arg1, arg2).call(CallCtx(arrayOf(2, 3, 4))))
+        assertEquals(9, node2.call())
+        assertEquals(10, node2.replaceChild(arg1, arg2).call())
     }
 
     @Test
     fun testSize() {
-        val arg1Factory = fromArgs<Int>(0)
-        val arg2Factory = fromArgs<Int>(1)
-        val arg3Factory = fromArgs<Int>(2)
-        val arg1 = arg1Factory.createNode(listOf())
-        val arg2 = arg2Factory.createNode(listOf())
-        val arg3 = arg3Factory.createNode(listOf())
+        val arg1 = createConstantTreeNode(2)
+        val arg2 = createConstantTreeNode(3)
+        val arg3 = createConstantTreeNode(4)
 
         val factory = FromFuncTreeNodeFactory.fromFunction(this::primitive)
         val node = factory.createNode(listOf(arg1, arg2))
         val node2 = factory.createNode(listOf(node, arg3))
         assertEquals(5, node2.size)
-    }
-
-    @Test
-    fun testOptimizer() {
-        val arg1Factory = fromArgs<Int>(0)
-        val arg2Factory = fromArgs<Int>(1)
-        val arg3Factory = fromArgs<Int>(2)
-        val arg1 = arg1Factory.createNode(listOf())
-        val arg2 = arg2Factory.createNode(listOf())
-        val arg3 = arg3Factory.createNode(listOf())
-
-        val factory = FromFuncTreeNodeFactory.fromFunction(this::primitive)
-            .withOptimizer {
-                createConstantTreeNode(99)
-            }
-        val node = factory.createNode(listOf(arg1, arg2))
-        val node2 = factory.createNode(listOf(node, arg3))
-        val optimized = node2.optimizeForEvaluation()
-        assertEquals(99, optimized.call(CallCtx()))
     }
 }

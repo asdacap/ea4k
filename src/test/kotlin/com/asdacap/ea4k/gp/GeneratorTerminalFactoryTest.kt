@@ -11,13 +11,13 @@ class GeneratorTerminalFactoryTest {
     @Test
     fun testGeneratorDetectReturnTypeCorrectly() {
         val factory = GeneratorTerminalFactory({ -1f })
-        Assertions.assertEquals(typeOf<Float>(), factory.returnType)
+        Assertions.assertEquals(KotlinNodeType(typeOf<Float>()), factory.returnType)
     }
 
     @Test
     fun testGeneratorDetectReturnTypeCorrectly2() {
         val factory = GeneratorTerminalFactory({ true })
-        Assertions.assertEquals(typeOf<Boolean>(), factory.returnType)
+        Assertions.assertEquals(KotlinNodeType(typeOf<Boolean>()), factory.returnType)
     }
 
     @Test

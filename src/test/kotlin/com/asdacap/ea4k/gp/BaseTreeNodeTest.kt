@@ -9,8 +9,7 @@ import kotlin.reflect.typeOf
 class BaseTreeNodeTest {
 
     class TestNodeType(val value: Int, override val children: List<BaseTreeNode<*>>): BaseTreeNode<Int>() {
-
-        override fun call(ctx: CallCtx): Int {
+        override fun call(): Int {
             return value
         }
 
@@ -18,7 +17,7 @@ class BaseTreeNodeTest {
             return otherTree is TestNodeType && value == otherTree.value
         }
 
-        override val returnType: KType = typeOf<Int>()
+        override val returnType: NodeType = KotlinNodeType(typeOf<Int>())
 
         override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<Int> {
             return TestNodeType(value, newChildren)

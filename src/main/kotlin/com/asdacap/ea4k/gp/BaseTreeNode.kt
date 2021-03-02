@@ -16,27 +16,16 @@ abstract class BaseTreeNode<out R> {
     open val children: List<BaseTreeNode<*>> = listOf()
 
     /**
-     * Return true of this tree node type will always return the same result if its children always
-     * return the same result
-     */
-    open val isPure: Boolean = true
-
-    /**
-     * Kinda same as isPure, but for all its subtree.
-     */
-    val isSubtreeConstant: Boolean by lazy { isPure && children.all { it.isSubtreeConstant } }
-
-    /**
      * Get the returnType of this tree node
      */
-    abstract val returnType: KType
+    abstract val returnType: NodeType
 
     /**
      * Actually call the treeNode to evaluate its result. A CallCtx is given to its. The CallCtx
      * contains the arguments for the whole tree. It is treated as the environment, and therefore
      * the tree node that depends on it must not be pure.
      */
-    abstract fun call(ctx: CallCtx): R
+    abstract fun call(): R
 
     /**
      * Create a copy of this treeNode with its children replaced
@@ -55,12 +44,6 @@ abstract class BaseTreeNode<out R> {
             }
         })
     }
-
-    /**
-     * Create a new tree that is optimized for evaluation. The resulting tree may not need be
-     * serializable, but is should behave the same as when its not optimized
-     */
-    open fun optimizeForEvaluation(): BaseTreeNode<R> = this
 
     /**
      * Return true if this node is effectively the same as the other node.

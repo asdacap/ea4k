@@ -2,7 +2,6 @@ package com.asdacap.ea4k.gp
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlin.reflect.KType
 
 /**
  * Something that makes treenode. This is what stored in pset.
@@ -25,8 +24,8 @@ import kotlin.reflect.KType
  *
  */
 interface TreeNodeFactory<R>: TreeNodeSerializer {
-    val returnType: KType
-    val args: List<KType>
+    val returnType: NodeType
+    val args: List<NodeType>
 
     fun createNode(children: List<BaseTreeNode<*>>): BaseTreeNode<R>
 }
