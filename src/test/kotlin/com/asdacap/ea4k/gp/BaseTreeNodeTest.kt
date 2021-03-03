@@ -9,6 +9,9 @@ import kotlin.reflect.typeOf
 class BaseTreeNodeTest {
 
     class TestNodeType(val value: Int, override val children: List<BaseTreeNode<*>>): BaseTreeNode<Int>() {
+        override val treeNodeFactory: TreeNodeFactory<Int>
+            get() = throw NotImplementedError()
+
         override fun evaluate(): Int {
             return value
         }

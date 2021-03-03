@@ -1,13 +1,13 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.*
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromBinaryFunction
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromGenerator
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
 import com.asdacap.ea4k.gp.Mutator.mutUniform
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.createConstantProducer
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromArgs
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromBinaryFunction
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromGenerator
 import com.asdacap.ea4k.gp.functional.FunctionNodeType
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantProducer
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.random.Random

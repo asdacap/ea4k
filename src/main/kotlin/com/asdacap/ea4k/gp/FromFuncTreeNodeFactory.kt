@@ -16,12 +16,12 @@ class FromFuncTreeNodeFactory <R>(
     // The given function accept value returned by the children evaluate function
     val func: (Array<Any>) -> R,
 
-    // The desired type of children for this tree node type
-    override val args: List<NodeType>,
-
     // The return type of this tree node type.
     // If not defined it may try to use reflection to detect it, but it does not work when passing lambda.
     override val returnType: NodeType = KotlinNodeType(func.reflect()!!.returnType),
+
+    // The desired type of children for this tree node type
+    override val args: List<NodeType> = listOf(),
 ): TreeNodeFactory<R> {
 
     companion object {
@@ -33,7 +33,7 @@ class FromFuncTreeNodeFactory <R>(
         inline fun <reified R> fromFunction(func: KCallable<R>): FromFuncTreeNodeFactory<R> {
             return FromFuncTreeNodeFactory({ input ->
                 func.call(*input)!!
-            }, func.parameters.map { KotlinNodeType(it.type) }, KotlinNodeType(typeOf<R>()))
+            }, KotlinNodeType(typeOf<R>()), func.parameters.map { KotlinNodeType(it.type) })
         }
 
         /**
@@ -42,16 +42,12 @@ class FromFuncTreeNodeFactory <R>(
         inline fun <reified R> fromConstant(constant: R): FromFuncTreeNodeFactory<R> {
             return FromFuncTreeNodeFactory({ input ->
                 constant
-            }, listOf(), KotlinNodeType(typeOf<R>()))
+            }, KotlinNodeType(typeOf<R>()), listOf())
         }
     }
 
     override fun createNode(children: List<BaseTreeNode<*>>): BaseTreeNode<R> {
-        return TreeNode(func, returnType, children.toList())
-    }
-
-    override fun canSerialize(tree: BaseTreeNode<*>): Boolean {
-        return tree is TreeNode && tree.func == this.func
+        return TreeNode(func, returnType, children.toList(), this)
     }
 
     override fun serialize(tree: BaseTreeNode<*>, objectMapper: ObjectMapper): JsonNode {
@@ -65,7 +61,8 @@ class FromFuncTreeNodeFactory <R>(
     class TreeNode <R>(
         val func: (Array<Any>) -> R,
         override val returnType: NodeType,
-        override val children: List<BaseTreeNode<*>>
+        override val children: List<BaseTreeNode<*>>,
+        override val treeNodeFactory: TreeNodeFactory<R>,
     ) : BaseTreeNode<R>() {
         val childrenArray = children.toTypedArray()
 
@@ -87,7 +84,7 @@ class FromFuncTreeNodeFactory <R>(
         }
 
         override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<R> {
-            return TreeNode(func, returnType, newChildren)
+            return TreeNode(func, returnType, newChildren, treeNodeFactory)
         }
     }
 }

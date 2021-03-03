@@ -6,6 +6,9 @@ package com.asdacap.ea4k.gp
  * A tree node should be immmutable.
  */
 abstract class BaseTreeNode<out R> {
+
+    abstract val treeNodeFactory: TreeNodeFactory<R>
+
     /**
      * A list of the treeNode's children.
      */

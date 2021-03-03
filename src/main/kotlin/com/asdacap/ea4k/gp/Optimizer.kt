@@ -1,7 +1,5 @@
 package com.asdacap.ea4k.gp
 
-import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
-
 /**
  * A tree optimizer is a function that transform a tree node into another
  * tree node, possibly optimized or with less overall tree node.

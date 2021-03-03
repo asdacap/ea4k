@@ -3,7 +3,6 @@ package com.asdacap.ea4k.gp
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import kotlin.reflect.KType
 
 
 /**
@@ -48,7 +47,7 @@ class PSet<R>(val returnType: NodeType) {
 
     fun <R> serializeToJson(tree: BaseTreeNode<R>): JsonNode {
         val factory = serializers.find {
-            it.second.canSerialize(tree)
+            it.second == tree.treeNodeFactory
         }
 
         if (factory == null) {

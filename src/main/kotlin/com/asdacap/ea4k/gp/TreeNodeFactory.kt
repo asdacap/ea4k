@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
  * can recreate it.
  *
  */
-interface TreeNodeFactory<R>: TreeNodeSerializer {
+interface TreeNodeFactory<out R>: TreeNodeSerializer {
     val returnType: NodeType
     val args: List<NodeType>
 
@@ -31,7 +31,6 @@ interface TreeNodeFactory<R>: TreeNodeSerializer {
 }
 
 interface TreeNodeSerializer {
-    fun canSerialize(tree: BaseTreeNode<*>): Boolean
     fun serialize(tree: BaseTreeNode<*>, objectMapper: ObjectMapper): JsonNode
     fun deserialize(nodeInfo: JsonNode, children: List<BaseTreeNode<*>>): BaseTreeNode<*>
 }

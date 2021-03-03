@@ -25,7 +25,6 @@ class GeneratorTerminalFactoryTest {
         val factory = GeneratorTerminalFactory({ Random.nextFloat() })
         testCommonNodeBehaviour(factory, listOf())
         val node = factory.createNode(listOf())
-        assertTrue(factory.canSerialize(node))
         val afterSerialize = node
             .let { factory.serialize(it, ObjectMapper()) }
             .let { factory.deserialize(it, listOf()) }

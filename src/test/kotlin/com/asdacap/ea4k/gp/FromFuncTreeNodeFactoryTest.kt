@@ -31,7 +31,7 @@ class FromFuncTreeNodeFactoryTest {
 
     @Test
     fun testMainConstructorDetectReturnTypeCorrectly() {
-        val factory = FromFuncTreeNodeFactory(::lazyPrimitive, listOf())
+        val factory = FromFuncTreeNodeFactory(::lazyPrimitive)
         assertEquals(KotlinNodeType(typeOf<Int>()), factory.returnType)
     }
 
@@ -39,7 +39,7 @@ class FromFuncTreeNodeFactoryTest {
     fun testMainConstructorDetectReturnTypeCorrectlyWithClosure() {
         val factory = FromFuncTreeNodeFactory({ inputs ->
             1f
-        }, listOf())
+        })
         assertEquals(KotlinNodeType(typeOf<Float>()), factory.returnType)
     }
 

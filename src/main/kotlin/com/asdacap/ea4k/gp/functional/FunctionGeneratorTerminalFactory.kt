@@ -18,11 +18,7 @@ class FunctionGeneratorTerminalFactory<R: Any>(
 ) : TreeNodeFactory<Function<R>> {
 
     override fun createNode(children: List<BaseTreeNode<*>>): BaseTreeNode<Function<R>> {
-        return TreeNode(generator(), generator, returnType)
-    }
-
-    override fun canSerialize(tree: BaseTreeNode<*>): Boolean {
-        return tree is TreeNode<*> && tree.generator == generator
+        return TreeNode(generator(), generator, returnType, this)
     }
 
     override fun serialize(tree: BaseTreeNode<*>, objectMapper: ObjectMapper): JsonNode {
@@ -32,10 +28,15 @@ class FunctionGeneratorTerminalFactory<R: Any>(
 
     override fun deserialize(nodeInfo: JsonNode, children: List<BaseTreeNode<*>>): BaseTreeNode<Function<R>> {
         val asConstant = ObjectMapper().treeToValue(nodeInfo, generator.reflect()!!.returnType.jvmErasure.java) as R
-        return TreeNode(asConstant, generator, returnType)
+        return TreeNode(asConstant, generator, returnType, this)
     }
 
-    class TreeNode<R>(val constant: R, val generator: () -> R, override val returnType: NodeType): BaseTreeNode<Function<R>>() {
+    class TreeNode<R>(
+        val constant: R,
+        val generator: () -> R,
+        override val returnType: NodeType,
+        override val treeNodeFactory: TreeNodeFactory<Function<R>>
+    ): BaseTreeNode<Function<R>>() {
         override fun evaluate(): Function<R> {
             return Function { constant }
         }
@@ -45,7 +46,7 @@ class FunctionGeneratorTerminalFactory<R: Any>(
         }
 
         override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<Function<R>> {
-            return TreeNode(constant, generator, returnType)
+            return TreeNode(constant, generator, returnType, treeNodeFactory)
         }
     }
 

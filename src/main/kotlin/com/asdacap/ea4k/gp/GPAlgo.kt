@@ -81,8 +81,4 @@ def mutUniform(individual, expr, pset):
         }
         return treeNode.replaceChild(selected, generated)
     }
-
-
-
-
 }

@@ -1,11 +1,13 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 import kotlin.system.measureTimeMillis
 
+@Disabled
 class GBBenchmark {
     val iteration = 50000
 

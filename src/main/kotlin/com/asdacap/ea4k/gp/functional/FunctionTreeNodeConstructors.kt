@@ -36,7 +36,7 @@ object FunctionTreeNodeConstructors {
             }.toTypedArray().let { inputVals ->
                 func(inputVals)
             }
-        }, args.map { FunctionNodeType(it) }, returnType)
+        }, returnType, args.map { FunctionNodeType(it) })
     }
 
     /**
@@ -55,7 +55,7 @@ object FunctionTreeNodeConstructors {
             Function { ctx: CallCtx ->
                 func(arg1.call(ctx), arg2.call(ctx))
             }
-        }, args, returnType)
+        }, returnType, args)
     }
 
     /**
@@ -79,7 +79,7 @@ object FunctionTreeNodeConstructors {
                     }
                 }
             }
-        }, args, functionalNodeTypeFromKType(typeOf<R>()))
+        }, functionalNodeTypeFromKType(typeOf<R>()), args)
     }
 
     /**
@@ -91,7 +91,7 @@ object FunctionTreeNodeConstructors {
             Function { ctx ->
                 ctx.args[argIdx] as R
             }
-        }, listOf(), functionalNodeTypeFromKType(typeOf<R>()))
+        }, functionalNodeTypeFromKType(typeOf<R>()))
     }
 
     /**
@@ -103,9 +103,9 @@ object FunctionTreeNodeConstructors {
 
     fun <R> createConstantTreeNode(constant: R, type: NodeType = FunctionNodeType(KotlinNodeType(constant!!::class.createType())))
             : BaseTreeNode<Function<R>> {
-        return FromFuncTreeNodeFactory.TreeNode({ input ->
+        return FromFuncTreeNodeFactory({ input ->
             Function { constant }
-        }, type, listOf())
+        }, type).createNode(listOf())
     }
 
     /**

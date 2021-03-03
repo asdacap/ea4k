@@ -1,9 +1,9 @@
 package com.asdacap.ea4k.gp
 
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.createConstantTreeNode
+import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromArgs
 import com.asdacap.ea4k.gp.functional.FunctionNodeType.Companion.functionalNodeTypeFromKType
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantTreeNode
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
