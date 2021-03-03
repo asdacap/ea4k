@@ -1,7 +1,7 @@
-package com.asdacap.ea4k.gp.higherorder
+package com.asdacap.ea4k.gp.functional
 
 import com.asdacap.ea4k.gp.BaseTreeNode
-import com.asdacap.ea4k.gp.CallCtxFunction
+import com.asdacap.ea4k.gp.Function
 import com.asdacap.ea4k.gp.NodeType
 import com.asdacap.ea4k.gp.TreeNodeFactory
 import com.fasterxml.jackson.databind.JsonNode
@@ -12,12 +12,12 @@ import kotlin.reflect.jvm.reflect
 /**
  * Generator can't use the FromFuncTreeNodeFactory as it need to store the generated value during serialization
  */
-class HigherOrderGeneratorTerminalFactory<R: Any>(
+class FunctionGeneratorTerminalFactory<R: Any>(
     val generator: () -> R,
     override val returnType: NodeType,
-) : TreeNodeFactory<CallCtxFunction<R>> {
+) : TreeNodeFactory<Function<R>> {
 
-    override fun createNode(children: List<BaseTreeNode<*>>): BaseTreeNode<CallCtxFunction<R>> {
+    override fun createNode(children: List<BaseTreeNode<*>>): BaseTreeNode<Function<R>> {
         return TreeNode(generator(), generator, returnType)
     }
 
@@ -30,21 +30,21 @@ class HigherOrderGeneratorTerminalFactory<R: Any>(
         return objectMapper.valueToTree(eTree.constant)
     }
 
-    override fun deserialize(nodeInfo: JsonNode, children: List<BaseTreeNode<*>>): BaseTreeNode<CallCtxFunction<R>> {
+    override fun deserialize(nodeInfo: JsonNode, children: List<BaseTreeNode<*>>): BaseTreeNode<Function<R>> {
         val asConstant = ObjectMapper().treeToValue(nodeInfo, generator.reflect()!!.returnType.jvmErasure.java) as R
         return TreeNode(asConstant, generator, returnType)
     }
 
-    class TreeNode<R>(val constant: R, val generator: () -> R, override val returnType: NodeType): BaseTreeNode<CallCtxFunction<R>>() {
-        override fun evaluate(): CallCtxFunction<R> {
-            return CallCtxFunction { constant }
+    class TreeNode<R>(val constant: R, val generator: () -> R, override val returnType: NodeType): BaseTreeNode<Function<R>>() {
+        override fun evaluate(): Function<R> {
+            return Function { constant }
         }
 
         override fun isNodeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean {
             return otherTree is TreeNode<*> && otherTree.constant == constant
         }
 
-        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<CallCtxFunction<R>> {
+        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<Function<R>> {
             return TreeNode(constant, generator, returnType)
         }
     }

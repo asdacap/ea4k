@@ -1,14 +1,13 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.*
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromArgs
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromBinaryFunction
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromFunctionMaker
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromGenerator
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromBinaryFunction
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromGenerator
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
 import com.asdacap.ea4k.gp.Mutator.mutUniform
-import com.asdacap.ea4k.gp.higherorder.HigherOrderNodeType
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.createConstantProducer
+import com.asdacap.ea4k.gp.functional.FunctionNodeType
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantProducer
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.random.Random
@@ -33,12 +32,12 @@ class GPTest {
         pset.addTreeNodeFactory("Random", fromGenerator { nextFloat() })
     }
 
-    fun treeGenerator(nodeType: NodeType = HigherOrderNodeType(KotlinNodeType(typeOf<Float>()))): BaseTreeNode<*> {
+    fun treeGenerator(nodeType: NodeType = FunctionNodeType(KotlinNodeType(typeOf<Float>()))): BaseTreeNode<*> {
         return Generator.genHalfAndHalf(pset, 0, 2, nodeType)
     }
 
     val MAX_SIZE = 100
-    val sqrtExperiment = FunctionalToolbox<BaseTreeNode<CallCtxFunction<Float>>, Float>(
+    val sqrtExperiment = FunctionalToolbox<BaseTreeNode<Function<Float>>, Float>(
         evaluateFn = { individual ->
             val rand = Random(0)
             (0..5).map {
@@ -67,7 +66,7 @@ class GPTest {
             c1 to c2
         },
         mutateFn = {
-            var result = mutUniform(it, ::treeGenerator) as BaseTreeNode<CallCtxFunction<Float>>
+            var result = mutUniform(it, ::treeGenerator) as BaseTreeNode<Function<Float>>
             if (result.size > MAX_SIZE) {
                 it
             } else {
@@ -90,7 +89,7 @@ class GPTest {
 
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
-            (1..populationCount).map { IndividualWithFitness(treeGenerator() as BaseTreeNode<CallCtxFunction<Float>>, null) },
+            (1..populationCount).map { IndividualWithFitness(treeGenerator() as BaseTreeNode<Function<Float>>, null) },
             sqrtExperiment,
             mu = populationCount,
             lambda_ = populationCount * 2,

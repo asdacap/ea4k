@@ -1,8 +1,7 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors
-import org.junit.jupiter.api.Disabled
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 import kotlin.system.measureTimeMillis
@@ -65,16 +64,16 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionMaker() {
-        val factory = HigherOrderTreeNodeConstructors.fromFunctionMaker({
-            val in1 = it[0] as CallCtxFunction<Int>
-            val in2 = it[1] as CallCtxFunction<Int>
-            CallCtxFunction {
+        val factory = FunctionTreeNodeConstructors.fromFunctionMaker({
+            val in1 = it[0] as Function<Int>
+            val in2 = it[1] as Function<Int>
+            Function {
                 primitive(in1.call(it), in2.call(it))
             }
         }, listOf(KotlinNodeType(typeOf<Int>())))
-        var cnode = HigherOrderTreeNodeConstructors.createConstantTreeNode(1)
+        var cnode = FunctionTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
-            cnode = factory.createNode(listOf(cnode, HigherOrderTreeNodeConstructors.createConstantTreeNode(1)));
+            cnode = factory.createNode(listOf(cnode, FunctionTreeNodeConstructors.createConstantTreeNode(1)));
         }
 
         val time = measureTimeMillis {
@@ -88,10 +87,10 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionFactory() {
-        val factory = HigherOrderTreeNodeConstructors.fromBinaryFunction(::primitive)
-        var cnode = HigherOrderTreeNodeConstructors.createConstantTreeNode(1)
+        val factory = FunctionTreeNodeConstructors.fromBinaryFunction(::primitive)
+        var cnode = FunctionTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
-            cnode = factory.createNode(listOf(cnode, HigherOrderTreeNodeConstructors.createConstantTreeNode(1)));
+            cnode = factory.createNode(listOf(cnode, FunctionTreeNodeConstructors.createConstantTreeNode(1)));
         }
 
         val time = measureTimeMillis {

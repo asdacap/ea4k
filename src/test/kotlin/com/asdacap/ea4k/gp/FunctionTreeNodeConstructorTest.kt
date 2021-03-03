@@ -1,14 +1,14 @@
 package com.asdacap.ea4k.gp
 
-import com.asdacap.ea4k.gp.higherorder.HigherOrderNodeType.Companion.higherOrderFromKType
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.createConstantTreeNode
-import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromArgs
+import com.asdacap.ea4k.gp.functional.FunctionNodeType.Companion.functionalNodeTypeFromKType
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantTreeNode
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 
-class HigherOrderTreeNodeConstructorTest {
+class FunctionTreeNodeConstructorTest {
 
     fun primitive(n1: Int, n2: Int): Int {
         return n1 + n2
@@ -26,15 +26,15 @@ class HigherOrderTreeNodeConstructorTest {
         val arg2 = arg2Factory.createNode(listOf())
         val ctx = CallCtx(arrayOf(2, 3))
 
-        val factory = HigherOrderTreeNodeConstructors.fromFunction(this::primitive)
-        assertTrue(higherOrderFromKType(typeOf<Int>()).isAssignableTo(factory.returnType))
+        val factory = FunctionTreeNodeConstructors.fromFunction(this::primitive)
+        assertTrue(functionalNodeTypeFromKType(typeOf<Int>()).isAssignableTo(factory.returnType))
         val node = factory.createNode(listOf(arg1, arg2))
         assertEquals(node.evaluate().call(ctx), 5)
     }
 
     @Test
     fun testCommonBehaviour() {
-        val factory = HigherOrderTreeNodeConstructors.fromFunction(this::primitive)
+        val factory = FunctionTreeNodeConstructors.fromFunction(this::primitive)
         testCommonNodeBehaviour(factory, listOf(createConstantTreeNode(0), createConstantTreeNode(1)))
     }
 }

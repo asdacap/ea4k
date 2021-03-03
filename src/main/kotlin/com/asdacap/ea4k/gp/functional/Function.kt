@@ -1,6 +1,9 @@
 package com.asdacap.ea4k.gp
 
-fun interface CallCtxFunction<out R> {
+/**
+ * A SAM that represent the callable function
+ */
+fun interface Function<out R> {
     fun call(ctx: CallCtx): R
 }
 
