@@ -1,42 +1,28 @@
 package com.asdacap.ea4k.gp
 
-import kotlin.reflect.KType
-
 /**
  * The tree node itself.
- * This is what gets cloned and called.
- * A tree node should be immmutable
+ * A tree node also represent a tree which can be evaluated to return a result of type R.
+ * A tree node should be immmutable.
  */
 abstract class BaseTreeNode<out R> {
+
+    abstract val treeNodeFactory: TreeNodeFactory<R>
+
     /**
-     * An array of the treeNode's children.
-     * The items may get replaced at any time, so subclass may want to avoid storing children separately
-     * Subclass may want to override this and provide a custom list for special handling
+     * A list of the treeNode's children.
      */
     open val children: List<BaseTreeNode<*>> = listOf()
 
     /**
-     * Return true of this tree node type will always return the same result if its children always
-     * return the same result
-     */
-    open val isPure: Boolean = true
-
-    /**
-     * Kinda same as isPure, but for all its subtree.
-     */
-    val isSubtreeConstant: Boolean by lazy { isPure && children.all { it.isSubtreeConstant } }
-
-    /**
      * Get the returnType of this tree node
      */
-    abstract val returnType: KType
+    abstract val returnType: NodeType
 
     /**
-     * Actually call the treeNode to evaluate its result. A CallCtx is given to its. The CallCtx
-     * contains the arguments for the whole tree. It is treated as the environment, and therefore
-     * the tree node that depends on it must not be pure.
+     * Evaluate the result of this tree node. Tree node generally will take into account its child to get the result.
      */
-    abstract fun call(ctx: CallCtx): R
+    abstract fun evaluate(): R
 
     /**
      * Create a copy of this treeNode with its children replaced
@@ -55,12 +41,6 @@ abstract class BaseTreeNode<out R> {
             }
         })
     }
-
-    /**
-     * Create a new tree that is optimized for evaluation. The resulting tree may not need be
-     * serializable, but is should behave the same as when its not optimized
-     */
-    open fun optimizeForEvaluation(): BaseTreeNode<R> = this
 
     /**
      * Return true if this node is effectively the same as the other node.
@@ -99,15 +79,7 @@ abstract class BaseTreeNode<out R> {
     /**
      * Return the size of this subTree
      */
-    val size: Int by lazy { getSizeDfs(mutableSetOf(), this) }
-
-    fun getSizeDfs(nodeSet: MutableSet<BaseTreeNode<*>>, treeNode: BaseTreeNode<*>): Int {
-        if (nodeSet.contains(treeNode)) {
-            return 0
-        }
-        nodeSet.add(treeNode)
-        return treeNode.children.map { getSizeDfs(nodeSet, it) }.sum() + 1
-    }
+    val size: Int by lazy { children.map { it.size }.sum() + 1 }
 }
 
 fun BaseTreeNode<*>.replaceChild(toReplace: BaseTreeNode<*>, replaceWith: BaseTreeNode<*>): BaseTreeNode<*> {

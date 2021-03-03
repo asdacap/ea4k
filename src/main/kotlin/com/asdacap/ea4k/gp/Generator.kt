@@ -2,10 +2,9 @@ package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.Utils
 import kotlin.random.Random
-import kotlin.reflect.KType
 
 object Generator {
-    fun <R> generate(pset: PSet<R>, min: Int, max: Int, condition: (Int, Int) -> Boolean, type: KType): BaseTreeNode<*> {
+    fun <R> generate(pset: PSet<R>, min: Int, max: Int, condition: (Int, Int) -> Boolean, type: NodeType): BaseTreeNode<*> {
         /*
         """Generate a Tree as a list of list. The tree is build
         from the root to the leaves, and it stop growing when the
@@ -26,10 +25,10 @@ object Generator {
 
         val height = Random.nextInt(min, max)
 
-        var recurGen: ((Int, KType) -> BaseTreeNode<*>)? = null
+        var recurGen: ((Int, NodeType) -> BaseTreeNode<*>)? = null
         recurGen = { depth, ret ->
             if (condition(height, depth)) {
-                val terminalOpts = pset.terminals[ret]
+                val terminalOpts = pset.getTerminalAssignableTo(ret)
                 if (terminalOpts == null || terminalOpts.size == 0) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a terminal of type $ret, but there is " +
@@ -38,7 +37,7 @@ object Generator {
                 val pickedTerminal = Utils.randomChoice(terminalOpts)
                 pickedTerminal.createNode(listOf())
             } else {
-                val primitiveOpts = pset.primitives[ret]
+                val primitiveOpts = pset.getPrimitiveAssignableTo(ret)
                 if (primitiveOpts == null || primitiveOpts.size == 0) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a primitive of type '$ret', but there is " +
@@ -52,7 +51,7 @@ object Generator {
         return recurGen(0, type)
     }
 
-    fun <R> genFull(pset: PSet<R>, min: Int, max: Int, type: KType): BaseTreeNode<*> {
+    fun <R> genFull(pset: PSet<R>, min: Int, max: Int, type: NodeType): BaseTreeNode<*> {
         """Generate an expression where each leaf has the same depth
     between *min* and *max*.
     :param pset: Primitive set from which primitives are selected.
@@ -67,7 +66,7 @@ object Generator {
         return generate(pset, min, max, {h, d -> h == d}, type)
     }
 
-    fun <R> genGrow(pset: PSet<R>, min: Int, max: Int, type: KType): BaseTreeNode<*> {
+    fun <R> genGrow(pset: PSet<R>, min: Int, max: Int, type: NodeType): BaseTreeNode<*> {
         """Generate an expression where each leaf might have a different depth
     between *min* and *max*.
     :param pset: Primitive set from which primitives are selected.
@@ -101,7 +100,7 @@ object Generator {
         method = random.choice((genGrow, genFull))
         return method(pset, min_, max_, type_)
      */
-    fun <R> genHalfAndHalf(pset: PSet<R>, min: Int, max: Int, type: KType): BaseTreeNode<*> {
+    fun <R> genHalfAndHalf(pset: PSet<R>, min: Int, max: Int, type: NodeType): BaseTreeNode<*> {
         if (Random.nextFloat() < 0.5) {
             return genGrow(pset, min, max, type)
         }

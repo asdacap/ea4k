@@ -1,7 +1,6 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.Utils.randomChoice
-import kotlin.reflect.KType
 
 object Mutator {
     fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNode<R>, BaseTreeNode<R>> {
@@ -17,10 +16,10 @@ object Mutator {
             return Pair(tr1, tr2)
         }
 
-        val tr1TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
-        val tr2TypeMap: MutableMap<KType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
-        val tr1Types: MutableSet<KType> = mutableSetOf();
-        val tr2Types: MutableSet<KType> = mutableSetOf();
+        val tr1TypeMap: MutableMap<NodeType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
+        val tr2TypeMap: MutableMap<NodeType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
+        val tr1Types: MutableSet<NodeType> = mutableSetOf();
+        val tr2Types: MutableSet<NodeType> = mutableSetOf();
 
         tr1.iterateAll().forEach {
             tr1TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
@@ -69,7 +68,7 @@ def mutUniform(individual, expr, pset):
     return individual,
  */
 
-    fun mutUniform(treeNode: BaseTreeNode<*>, expr: (KType) -> BaseTreeNode<*>): BaseTreeNode<*>? {
+    fun mutUniform(treeNode: BaseTreeNode<*>, expr: (NodeType) -> BaseTreeNode<*>): BaseTreeNode<*>? {
         val allSub = treeNode.iterateAll()
         if (allSub.size == 0) {
             return null
@@ -82,8 +81,4 @@ def mutUniform(individual, expr, pset):
         }
         return treeNode.replaceChild(selected, generated)
     }
-
-
-
-
 }
