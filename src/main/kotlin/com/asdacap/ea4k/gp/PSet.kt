@@ -16,9 +16,9 @@ class PSet<R>(val returnType: NodeType) {
             val primitiveCount = primitives.map { it.value.size }.sum()
             return terminalCount.toFloat() / (primitiveCount + terminalCount).toFloat()
         }
-    val terminals: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
-    val primitives: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
-    val serializers: MutableList<Pair<String, TreeNodeFactory<*>>> = mutableListOf()
+    private val terminals: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
+    private val primitives: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
+    private val serializers: MutableList<Pair<String, TreeNodeFactory<*>>> = mutableListOf()
 
     private fun <R> addTerminal(name: String, terminal: TreeNodeFactory<R>) {
         if (terminals[terminal.returnType] == null) {
@@ -93,6 +93,14 @@ class PSet<R>(val returnType: NodeType) {
 
         val nodeInfo = jsonNode.get("node") ?: objectMapper.createObjectNode()
         return factory.second.deserialize(nodeInfo, children)
+    }
+
+    fun getTerminalAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {
+        return terminals.filter { it.key.isAssignableTo(ret) } .flatMap { it.value }
+    }
+
+    fun getPrimitiveAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {
+        return primitives.filter { it.key.isAssignableTo(ret) } .flatMap { it.value }
     }
 }
 

@@ -20,7 +20,7 @@ class FromFuncTreeNodeFactoryTest {
         val factory = FromFuncTreeNodeFactory.fromFunction(this::primitive)
         assertEquals(KotlinNodeType(typeOf<Int>()), factory.returnType)
         val node = factory.createNode(listOf(createConstantTreeNode(2), createConstantTreeNode(3)))
-        assertEquals(node.call(), 5)
+        assertEquals(node.evaluate(), 5)
     }
 
     @Test
@@ -59,8 +59,8 @@ class FromFuncTreeNodeFactoryTest {
         val node = factory.createNode(listOf(arg1, arg2))
         val node2 = factory.createNode(listOf(node, arg3))
 
-        assertEquals(9, node2.call())
-        assertEquals(10, node2.replaceChild(arg1, arg2).call())
+        assertEquals(9, node2.evaluate())
+        assertEquals(10, node2.replaceChild(arg1, arg2).evaluate())
     }
 
     @Test

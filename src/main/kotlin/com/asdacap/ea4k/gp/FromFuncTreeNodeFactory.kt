@@ -10,14 +10,13 @@ import kotlin.reflect.typeOf
  * Generate a tree node that essentially call the given function.
  *
  * Turns out, a lot of other type of tree node can be made with this factory.
- * So most tree node type basically translate back to this tree node
+ * So most tree node type basically translate back to this tree node type.
  */
 class FromFuncTreeNodeFactory <R>(
-    // The given function accept the call context and an array of child tree node.
-    // The implementation may skip calling she child tree node for optimization purpose.
+    // The given function accept value returned by the children evaluate function
     val func: (Array<Any>) -> R,
 
-    // The desired type of child for this tree node type
+    // The desired type of children for this tree node type
     override val args: List<NodeType>,
 
     // The return type of this tree node type.
@@ -70,13 +69,13 @@ class FromFuncTreeNodeFactory <R>(
     ) : BaseTreeNode<R>() {
         val childrenArray = children.toTypedArray()
 
-        override fun call(): R {
+        override fun evaluate(): R {
             // Hot code!
             val size = childrenArray.size
             val newArray = arrayOfNulls<Any>(size)
             var i = 0
             while(i < size) {
-                newArray[i] = childrenArray[i].call()
+                newArray[i] = childrenArray[i].evaluate()
                 i++
             }
             return func.invoke(newArray as Array<Any>)

@@ -28,7 +28,7 @@ object Generator {
         var recurGen: ((Int, NodeType) -> BaseTreeNode<*>)? = null
         recurGen = { depth, ret ->
             if (condition(height, depth)) {
-                val terminalOpts = pset.terminals[ret]
+                val terminalOpts = pset.getTerminalAssignableTo(ret)
                 if (terminalOpts == null || terminalOpts.size == 0) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a terminal of type $ret, but there is " +
@@ -37,7 +37,7 @@ object Generator {
                 val pickedTerminal = Utils.randomChoice(terminalOpts)
                 pickedTerminal.createNode(listOf())
             } else {
-                val primitiveOpts = pset.primitives[ret]
+                val primitiveOpts = pset.getPrimitiveAssignableTo(ret)
                 if (primitiveOpts == null || primitiveOpts.size == 0) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a primitive of type '$ret', but there is " +
