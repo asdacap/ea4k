@@ -1,14 +1,14 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
+import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 import kotlin.system.measureTimeMillis
 
-@Disabled
 class GBBenchmark {
-    val iteration = 500000
+    val iteration = 50000
 
     fun primitive(n1: Int, n2: Int): Int {
         return n1 + n2
@@ -45,12 +45,12 @@ class GBBenchmark {
     @Test
     fun testHigherOrderIntegerAdd() {
         val factory = FromFuncTreeNodeFactory.fromFunction(this::higherOrderPrimitive)
-        var cnode = createConstantTreeNode({ ctx: CallCtx -> 1 } as (CallCtx) -> Int, typeOf<(CallCtx) -> Int>())
+        var cnode = createConstantTreeNode({ ctx: CallCtx -> 1 } as (CallCtx) -> Int, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
         (1..1000).forEach {
             cnode = factory.createNode(
                 listOf(
                     cnode,
-                    createConstantTreeNode({ ctx: CallCtx -> 1 } as (CallCtx) -> Int, typeOf<(CallCtx) -> Int>())
+                    createConstantTreeNode({ ctx: CallCtx -> 1 } as (CallCtx) -> Int, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
                 ))
         }
 
@@ -65,22 +65,22 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionMaker() {
-        val factory = HigherOrderTreeNodeFactory.fromFunctionMaker({
-            val in1 = it[0] as (CallCtx) -> Int
-            val in2 = it[1] as (CallCtx) -> Int
-            {
-                primitive(in1(it), in2(it))
+        val factory = HigherOrderTreeNodeConstructors.fromFunctionMaker({
+            val in1 = it[0] as CallCtxFunction<Int>
+            val in2 = it[1] as CallCtxFunction<Int>
+            CallCtxFunction {
+                primitive(in1.call(it), in2.call(it))
             }
         }, listOf(KotlinNodeType(typeOf<Int>())))
-        var cnode = HigherOrderTreeNodeFactory.createConstantTreeNode(1)
+        var cnode = HigherOrderTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
-            cnode = factory.createNode(listOf(cnode, HigherOrderTreeNodeFactory.createConstantTreeNode(1)));
+            cnode = factory.createNode(listOf(cnode, HigherOrderTreeNodeConstructors.createConstantTreeNode(1)));
         }
 
         val time = measureTimeMillis {
             val func = cnode.evaluate()
             (1..iteration).forEach {
-                func(CallCtx())
+                func.call(CallCtx())
             }
         }
         println("Function maker higher order took $time ms")
@@ -88,16 +88,16 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionFactory() {
-        val factory = HigherOrderTreeNodeFactory.fromBinaryFunction(::primitive)
-        var cnode = HigherOrderTreeNodeFactory.createConstantTreeNode(1)
+        val factory = HigherOrderTreeNodeConstructors.fromBinaryFunction(::primitive)
+        var cnode = HigherOrderTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
-            cnode = factory.createNode(listOf(cnode, HigherOrderTreeNodeFactory.createConstantTreeNode(1)));
+            cnode = factory.createNode(listOf(cnode, HigherOrderTreeNodeConstructors.createConstantTreeNode(1)));
         }
 
         val time = measureTimeMillis {
             val func = cnode.evaluate()
             (1..iteration).forEach {
-                func(CallCtx())
+                func.call(CallCtx())
             }
         }
         println("From func higher order took $time ms")

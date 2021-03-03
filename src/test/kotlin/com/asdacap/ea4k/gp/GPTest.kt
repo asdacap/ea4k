@@ -1,12 +1,14 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.*
-import com.asdacap.ea4k.gp.HigherOrderTreeNodeFactory.fromArgs
-import com.asdacap.ea4k.gp.HigherOrderTreeNodeFactory.fromBinaryFunction
-import com.asdacap.ea4k.gp.HigherOrderTreeNodeFactory.fromFunctionMaker
-import com.asdacap.ea4k.gp.HigherOrderTreeNodeFactory.fromGenerator
+import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromArgs
+import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromBinaryFunction
+import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromFunctionMaker
+import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.fromGenerator
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
 import com.asdacap.ea4k.gp.Mutator.mutUniform
+import com.asdacap.ea4k.gp.higherorder.HigherOrderNodeType
+import com.asdacap.ea4k.gp.higherorder.HigherOrderTreeNodeConstructors.createConstantProducer
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.random.Random
@@ -26,8 +28,8 @@ class GPTest {
         pset.addTreeNodeFactory("Mul", fromBinaryFunction(::multiply))
         pset.addTreeNodeFactory("Add", fromBinaryFunction(::add))
         pset.addTreeNodeFactory("Sub", fromBinaryFunction(::subtract))
-        pset.addTreeNodeFactory("Constant1", fromFunctionMaker({ { 1.0f } }, listOf()))
-        pset.addTreeNodeFactory("ConstantNeg99", fromFunctionMaker({ { -99.0f } }, listOf()))
+        pset.addTreeNodeFactory("Constant1", createConstantProducer(1.0f))
+        pset.addTreeNodeFactory("ConstantNeg99", createConstantProducer(-99.0f))
         pset.addTreeNodeFactory("Random", fromGenerator { nextFloat() })
     }
 
@@ -36,13 +38,13 @@ class GPTest {
     }
 
     val MAX_SIZE = 100
-    val sqrtExperiment = FunctionalToolbox<BaseTreeNode<(CallCtx) -> Float>, Float>(
+    val sqrtExperiment = FunctionalToolbox<BaseTreeNode<CallCtxFunction<Float>>, Float>(
         evaluateFn = { individual ->
             val rand = Random(0)
             (0..5).map {
                 val inp = rand.nextFloat() * 100
                 val answer = inp*(inp + 1)*(inp - 99) // The equation to guess
-                val test = individual.evaluate()(CallCtx(arrayOf(inp)))
+                val test = individual.evaluate().call(CallCtx(arrayOf(inp)))
                 val diff = answer - test
                 diff * diff
             }.sum()
@@ -65,7 +67,7 @@ class GPTest {
             c1 to c2
         },
         mutateFn = {
-            var result = mutUniform(it, ::treeGenerator) as BaseTreeNode<(CallCtx) -> Float>
+            var result = mutUniform(it, ::treeGenerator) as BaseTreeNode<CallCtxFunction<Float>>
             if (result.size > MAX_SIZE) {
                 it
             } else {
@@ -88,7 +90,7 @@ class GPTest {
 
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
-            (1..populationCount).map { IndividualWithFitness(treeGenerator() as BaseTreeNode<(CallCtx) -> Float>, null) },
+            (1..populationCount).map { IndividualWithFitness(treeGenerator() as BaseTreeNode<CallCtxFunction<Float>>, null) },
             sqrtExperiment,
             mu = populationCount,
             lambda_ = populationCount * 2,

@@ -1,7 +1,7 @@
-package com.asdacap.ea4k.gp
+package com.asdacap.ea4k.gp.higherorder
 
-import com.asdacap.ea4k.gp.HigherOrderNodeType.Companion.higherOrderFromKType
-import sun.reflect.generics.tree.ReturnType
+import com.asdacap.ea4k.gp.*
+import com.asdacap.ea4k.gp.higherorder.HigherOrderNodeType.Companion.higherOrderFromKType
 import kotlin.reflect.KCallable
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
@@ -28,7 +28,7 @@ data class HigherOrderNodeType(val innerType: NodeType): NodeType {
  * The resulting function will accept a single parameter, which is of type CallCtx. The input of the function
  * can then be put in the CallCtx.
  */
-object HigherOrderTreeNodeFactory {
+object HigherOrderTreeNodeConstructors {
 
     /**
      * Create a higher order tree node factory from a lambda that itself accept a list of other function.
@@ -36,13 +36,13 @@ object HigherOrderTreeNodeFactory {
      * for example, for an AND predicate, if one child already get a false, the other child no longer need to be evaluated.
      */
     inline fun <reified R> fromFunctionMaker(
-        crossinline func: (Array<(CallCtx) -> Any>) -> (CallCtx) -> R,
+        crossinline func: (Array<CallCtxFunction<Any>>) -> CallCtxFunction<R>,
         args: List<NodeType>,
         returnType: NodeType = higherOrderFromKType(typeOf<R>())
-    ): FromFuncTreeNodeFactory<(CallCtx) -> R> {
+    ): FromFuncTreeNodeFactory<CallCtxFunction<R>> {
         return FromFuncTreeNodeFactory({ input ->
             input.map {
-                (it as (CallCtx) -> Any)
+                (it as CallCtxFunction<Any>)
             }.toTypedArray().let { inputVals ->
                 func(inputVals)
             }
@@ -57,13 +57,13 @@ object HigherOrderTreeNodeFactory {
         noinline func: (I1, I2) -> R,
         args: List<NodeType> = func.reflect()!!.parameters.map { higherOrderFromKType(it.type) },
         returnType: NodeType = higherOrderFromKType(typeOf<R>())
-    ): FromFuncTreeNodeFactory<(CallCtx) -> R> {
+    ): FromFuncTreeNodeFactory<CallCtxFunction<R>> {
         return FromFuncTreeNodeFactory({ input ->
-            val arg1 = input[0] as (CallCtx) -> I1
-            val arg2 = input[1] as (CallCtx) -> I2
+            val arg1 = input[0] as CallCtxFunction<I1>
+            val arg2 = input[1] as CallCtxFunction<I2>
 
-            {
-                func(arg1(it), arg2(it))
+            CallCtxFunction { ctx: CallCtx ->
+                func(arg1.call(ctx), arg2.call(ctx))
             }
         }, args, returnType)
     }
@@ -72,17 +72,17 @@ object HigherOrderTreeNodeFactory {
      * Create a higher order tree node factory from that uses the passed in function.
      * The resulting function have some overhead.
      */
-    inline fun <reified R> fromFunction(func: KCallable<R>): FromFuncTreeNodeFactory<(CallCtx) -> R> {
+    inline fun <reified R> fromFunction(func: KCallable<R>): FromFuncTreeNodeFactory<CallCtxFunction<R>> {
         val args = func.parameters.map { higherOrderFromKType(it.type) }
         return FromFuncTreeNodeFactory({ input ->
             input.map {
-                (it as (CallCtx) -> Any)
+                (it as CallCtxFunction<Any>)
             }.toTypedArray().let { inputValProducer ->
                 arrayOfNulls<Any>(inputValProducer.size).let { inputVals ->
-                    { callCtx: CallCtx ->
+                    CallCtxFunction{ callCtx: CallCtx ->
                         var i = 0
                         while (i < args.size) {
-                            inputVals[i] = inputValProducer[i](callCtx)
+                            inputVals[i] = inputValProducer[i].call(callCtx)
                             i++
                         }
                         func.call(*inputVals)
@@ -96,19 +96,33 @@ object HigherOrderTreeNodeFactory {
      * Create a higher order tree node that finally extract the input of the whole tree from the CallCtx
      * This is basically the tree terminal that gets input.
      */
-    inline fun <reified R> fromArgs(argIdx: Int): FromFuncTreeNodeFactory<(CallCtx) -> R> {
+    inline fun <reified R> fromArgs(argIdx: Int): FromFuncTreeNodeFactory<CallCtxFunction<R>> {
         return FromFuncTreeNodeFactory({ input ->
-            { ctx ->
+            CallCtxFunction { ctx ->
                 ctx.args[argIdx] as R
             }
         }, listOf(), higherOrderFromKType(typeOf<R>()))
     }
 
     /**
+     * Create a tree node factory that creates a higher order tree node that always return the constant specified
+     */
+    inline fun <reified R> createConstantProducer(constant: R): FromFuncTreeNodeFactory<CallCtxFunction<R>> {
+        return fromFunctionMaker({ CallCtxFunction{ constant } }, listOf())
+    }
+
+    fun <R> createConstantTreeNode(constant: R, type: NodeType = HigherOrderNodeType(KotlinNodeType(constant!!::class.createType())))
+            : BaseTreeNode<CallCtxFunction<R>> {
+        return FromFuncTreeNodeFactory.TreeNode({ input ->
+            CallCtxFunction { constant }
+        }, type, listOf())
+    }
+
+    /**
      * Create a higher order tree node that finally extract the input of the whole tree from the CallCtx
      * This is basically the tree terminal that gets input.
      */
-    inline fun <reified R: Any> fromGenerator(crossinline generator: () -> R): TreeNodeFactory<(CallCtx) -> R> {
+    inline fun <reified R: Any> fromGenerator(crossinline generator: () -> R): TreeNodeFactory<CallCtxFunction<R>> {
         return HigherOrderGeneratorTerminalFactory({ generator() }, higherOrderFromKType(typeOf<R>()))
     }
 }
