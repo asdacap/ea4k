@@ -49,10 +49,11 @@ class GPTest {
 
     fun evaluate(individual: TreeNode<NodeFunction<Float>>): Float {
         val rand = Random(0)
+        val func = individual.evaluate()
         return (0..5).map {
             val inp = rand.nextFloat() * 100
             val answer = targetEquation(inp) // The equation to guess
-            val test = individual.evaluate().call(CallCtx(arrayOf(inp)))
+            val test = func.call(CallCtx(inp))
             val diff = answer - test
             diff * diff
         }.sum()

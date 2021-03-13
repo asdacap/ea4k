@@ -21,6 +21,5 @@ class ConstantNodeFunction<R> (val constant: R): NodeFunction<R> {
  * The context provide the arguments for the terminals.
  */
 class CallCtx(
-    // Array instead of List for optimization reason
-    val args: Array<Any> = arrayOf()
+    vararg val args: Any
 )

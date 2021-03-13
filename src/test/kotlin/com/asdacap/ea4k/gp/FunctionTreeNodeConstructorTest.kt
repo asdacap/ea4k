@@ -27,7 +27,7 @@ class FunctionTreeNodeConstructorTest {
         val arg2Factory = fromArgs<Int>(1)
         val arg1 = arg1Factory.createNode(listOf())
         val arg2 = arg2Factory.createNode(listOf())
-        val ctx = CallCtx(arrayOf(2, 3))
+        val ctx = CallCtx(2, 3)
 
         val factory = FunctionTreeNodeConstructors.fromKCallable(this::primitive)
         assertTrue(functionalNodeTypeFromKType(typeOf<Int>()).isAssignableTo(factory.returnType))
