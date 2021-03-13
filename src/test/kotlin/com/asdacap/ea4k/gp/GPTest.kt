@@ -4,6 +4,7 @@ import com.asdacap.ea4k.*
 import com.asdacap.ea4k.Utils.mateCutoff
 import com.asdacap.ea4k.Utils.mutateCutoff
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
+import com.asdacap.ea4k.gp.Mutator.mutRecreateState
 import com.asdacap.ea4k.gp.Mutator.mutUniform
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromConstant
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
@@ -12,9 +13,12 @@ import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromGenerator
 import com.asdacap.ea4k.gp.functional.CallCtx
 import com.asdacap.ea4k.gp.functional.NodeFunction
 import com.asdacap.ea4k.gp.functional.FunctionNodeType
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import java.io.File
 import kotlin.random.Random
+import kotlin.random.Random.Default.nextDouble
 import kotlin.random.Random.Default.nextFloat
 import kotlin.reflect.typeOf
 
@@ -57,6 +61,15 @@ class GPTest {
 
     @Test
     fun testBasic() {
+        (0..5).forEach {
+            if (runExperiment()) {
+                return
+            }
+        }
+        fail("Unable to converge after 5 tries")
+    }
+
+    fun runExperiment(): Boolean {
         val experiment = toolboxWithEvaluate<TreeNode<NodeFunction<Float>>, Float>
         { individual ->
             evaluate(individual)
@@ -66,13 +79,19 @@ class GPTest {
             mateCutoff(::cxOnePoint, ::nodeFilter)
         ).withMutate {
             mutateCutoff({
-                mutUniform(it, ::treeGenerator)
+                if (nextDouble() < 0.5) {
+                    mutUniform(it, ::treeGenerator)
+                } else {
+                    mutRecreateState(it)
+                }
             }, ::nodeFilter) (it)
         }.withOnGeneration {
+            /*
             val minValue = it.sortedBy { it.fitness!! }.first()
             System.out.println(minValue.fitness)
             val asJson = pset.serialize(minValue.individual)
             File("ind.json").writeText(asJson.toPrettyString())
+             */
         }
 
         val populationCount = 1000
@@ -81,12 +100,12 @@ class GPTest {
             (1..populationCount).map { IndividualWithFitness(treeGenerator() as TreeNode<NodeFunction<Float>>, null) },
             experiment,
             mu = populationCount,
-            lambda_ = populationCount * 2,
+            lambda_ = populationCount * 5,
             cxpb = 0.8,
             mutpb = 0.1,
-            ngen = 100
+            ngen = 50
         )
 
-        assert(result.sortedBy { it.fitness }.first().fitness!! < 0.1f)
+        return result.sortedBy { it.fitness }.first().fitness!! < 0.1f
     }
 }

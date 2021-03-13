@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import kotlin.random.Random
 import kotlin.reflect.typeOf
 
-class GeneratorTerminalFactoryTest {
+class GeneratorTreeNodeTest {
     @Test
     fun testGeneratorDetectReturnTypeCorrectly() {
         val factory = GeneratorTreeNode.Factory({ -1f })

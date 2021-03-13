@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
 
-class FromFuncTreeNodeFactoryTest {
+class FromFuncTreeNodeTest {
 
     fun primitive(n1: Int, n2: Int): Int {
         return n1 + n2

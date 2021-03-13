@@ -20,9 +20,16 @@ abstract class TreeNode<out R> {
     open val children: List<TreeNode<*>> = listOf()
 
     /**
-     * The state of the node. If the node does not store any state, then return an empty json object node.
+     * The state of the node. If the node does not store any state, then return null json object node.
      */
-    open val state: JsonNode = Utils.objectMapper.createObjectNode()
+    open val state: JsonNode = Utils.objectMapper.nullNode()
+
+    /**
+     * Return false if this tree node have states
+     */
+    open val isStateful: Boolean by lazy {
+        state != Utils.objectMapper.nullNode()
+    }
 
     /**
      * Evaluate the result of this tree node. Tree node generally will take into account its child to get the result.

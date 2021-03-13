@@ -1,5 +1,6 @@
 package com.asdacap.ea4k.gp
 
+import com.asdacap.ea4k.gp.Utils.objectMapper
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -42,8 +43,6 @@ class PSet<R>(val returnType: NodeType) {
         }
     }
 
-    val objectMapper = ObjectMapper()
-
     fun <R> serialize(tree: TreeNode<R>): JsonNode {
         val factory = serializers.find {
             it.second == tree.factory
@@ -62,7 +61,7 @@ class PSet<R>(val returnType: NodeType) {
             childArray.add(it)
         }
         json.put("factory", factory.first)
-        if (parent != objectMapper.createObjectNode()) {
+        if (parent != objectMapper.nullNode()) {
             json.set<ObjectNode>("node", parent)
         }
         if (!childArray.isEmpty) {
@@ -89,7 +88,7 @@ class PSet<R>(val returnType: NodeType) {
                 deserialize(it)
             }
 
-        val nodeInfo = jsonNode.get("node") ?: objectMapper.createObjectNode()
+        val nodeInfo = jsonNode.get("node") ?: null
         return factory.second.createNode(children, nodeInfo)
     }
 

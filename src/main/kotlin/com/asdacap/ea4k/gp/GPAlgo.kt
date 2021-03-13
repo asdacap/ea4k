@@ -54,11 +54,29 @@ object Mutator {
      * @param expr A function object that can generate an subtree when called.
      * @return A tree.
      */
-    fun <R> mutUniform (treeNode: TreeNode<R>, expr: (NodeType) -> TreeNode<*>): TreeNode<R> {
+    fun <R> mutUniform(treeNode: TreeNode<R>, expr: (NodeType) -> TreeNode<*>): TreeNode<R> {
         val allSub = treeNode.iterateAll()
         val selected = randomChoice(allSub);
         val returnType = selected.factory.returnType
         val generated = expr(returnType)
         return treeNode.replaceChild(selected, generated)
+    }
+
+    /**
+     * Randomly select a stateful tree node in *individual*, then replace the
+     * subtree at that point with a new stateful tree node.
+     * @param individual The tree to be mutated.
+     * @return A tree.
+     */
+    fun <R> mutRecreateState(treeNode: TreeNode<R>): TreeNode<R> {
+        val allSub = treeNode.iterateAll()
+            .filter { it.isStateful }
+        if (allSub.isEmpty()) {
+            return treeNode
+        }
+
+        val selected = randomChoice(allSub);
+        val regenerated = selected.factory.createNode(selected.children)
+        return treeNode.replaceChild(selected, regenerated)
     }
 }
