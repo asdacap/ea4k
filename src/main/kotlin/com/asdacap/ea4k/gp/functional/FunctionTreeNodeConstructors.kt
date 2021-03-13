@@ -126,7 +126,7 @@ object FunctionTreeNodeConstructors {
      * This is basically the tree terminal that gets input.
      */
     inline fun <reified R> fromArgs(argIdx: Int, nodeType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>())): TreeNodeFactory<NodeFunction<R>> {
-        return FromFuncTreeNode.Factory({ input ->
+        return FromFuncTreeNode.Factory({
             NodeFunction { ctx ->
                 ctx.args[argIdx] as R
             }
@@ -153,7 +153,7 @@ object FunctionTreeNodeConstructors {
      */
     fun <R> createConstantTreeNode(constant: R, type: NodeType = FunctionNodeType(KotlinNodeType(constant!!::class.createType())))
             : TreeNode<NodeFunction<R>> {
-        return FromFuncTreeNode.Factory({ input ->
+        return FromFuncTreeNode.Factory({
             NodeFunction { constant }
         }, type).createNode(listOf())
     }

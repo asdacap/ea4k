@@ -40,8 +40,8 @@ internal class AlgorithmsKtTest {
         val result = eaSimple(
             startingPop.map { IndividualWithFitness(it, null) },
             sphereBenchmark,
-            cxpb = 0.3f,
-            mutpb = 0.2f,
+            cxpb = 0.3,
+            mutpb = 0.2,
             ngen = 100
         )
 
@@ -64,8 +64,8 @@ internal class AlgorithmsKtTest {
             sphereBenchmark,
             mu = 100,
             lambda_ = 200,
-            cxpb = 0.3f,
-            mutpb = 0.2f,
+            cxpb = 0.3,
+            mutpb = 0.2,
             ngen = 100
         )
 
@@ -88,8 +88,8 @@ internal class AlgorithmsKtTest {
             sphereBenchmark,
             mu = 100,
             lambda_ = 200,
-            cxpb = 0.3f,
-            mutpb = 0.2f,
+            cxpb = 0.3,
+            mutpb = 0.2,
             ngen = 100
         )
 

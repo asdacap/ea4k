@@ -44,6 +44,7 @@ class GeneratorTreeNode<R>(
                 generator()
             } else {
                 val constantState = state.get("constant")
+                @Suppress("UNCHECKED_CAST")
                 Utils.objectMapper.treeToValue(constantState, kotlinReturnType) as R
             }
 

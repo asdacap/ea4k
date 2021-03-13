@@ -37,14 +37,14 @@ object Algorithms {
         population: List<IndividualWithFitness<I, F>>,
         toolbox: Toolbox<I, F>,
         lambda_: Int,
-        cxpb: Float,
-        mutpb: Float
+        cxpb: Double,
+        mutpb: Double
     ): List<IndividualWithFitness<I, F>> {
         check(cxpb + mutpb <= 1.0f, { "The sum of the crossover and mutation probabilities must be smaller or equal to 1.0." })
 
         return (0..lambda_).let {
             toolbox.map({
-                val opChoice = Random.nextFloat()
+                val opChoice = Random.nextDouble()
                 if (opChoice < cxpb) {
                     // Crossover
                     val rand1 = population[Random.nextInt(0, population.size)]
@@ -97,13 +97,13 @@ object Algorithms {
     fun <I, F> varAnd(
         population: List<IndividualWithFitness<I, F>>,
         toolbox: Toolbox<I, F>,
-        cxpb: Float,
-        mutpb: Float
+        cxpb: Double,
+        mutpb: Double
     ): List<IndividualWithFitness<I, F>> {
         val asMut = population.toMutableList()
 
         (0..(asMut.size-2) step 2).forEach{
-            if (Random.nextFloat() < cxpb) {
+            if (Random.nextDouble() < cxpb) {
                 val (m1, m2) = toolbox.mateWithFitness(asMut[it], asMut[it+1])
                 asMut[it] = m1
                 asMut[it+1] = m2
@@ -111,7 +111,7 @@ object Algorithms {
         }
 
         (0..(asMut.size-1)).forEach{
-            if (Random.nextFloat() < mutpb) {
+            if (Random.nextDouble() < mutpb) {
                 val m1 = toolbox.mutateWithFitness(asMut[it])
                 asMut[it] = m1
             }
@@ -186,8 +186,8 @@ object Algorithms {
         toolbox: Toolbox<I, F>,
         mu: Int,
         lambda_: Int,
-        cxpb: Float,
-        mutpb: Float,
+        cxpb: Double,
+        mutpb: Double,
         ngen: Int
     ): List<IndividualWithFitness<I, F>> {
 
@@ -269,8 +269,8 @@ object Algorithms {
     fun <I, F> eaSimple(
         population: List<IndividualWithFitness<I, F>>,
         toolbox: Toolbox<I, F>,
-        cxpb: Float,
-        mutpb: Float,
+        cxpb: Double,
+        mutpb: Double,
         ngen: Int
     ): List<IndividualWithFitness<I, F>> {
         var population = population
@@ -352,8 +352,8 @@ object Algorithms {
         toolbox: Toolbox<I, F>,
         mu: Int,
         lambda_: Int,
-        cxpb: Float,
-        mutpb: Float,
+        cxpb: Double,
+        mutpb: Double,
         ngen: Int
     ): List<IndividualWithFitness<I, F>> {
         check(lambda_ >= mu, { "lambda must be greater or equal to mu." })

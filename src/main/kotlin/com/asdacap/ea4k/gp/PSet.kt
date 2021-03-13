@@ -8,11 +8,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode
  * Stores a set of terminal and primitives
  */
 class PSet<R>(val returnType: NodeType) {
-    val terminalRatio: Float
+    val terminalRatio: Double
         get() {
             val terminalCount = terminals.map { it.value.size }.sum()
             val primitiveCount = primitives.map { it.value.size }.sum()
-            return terminalCount.toFloat() / (primitiveCount + terminalCount).toFloat()
+            return terminalCount.toDouble() / (primitiveCount + terminalCount).toDouble()
         }
     private val terminals: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
     private val primitives: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()

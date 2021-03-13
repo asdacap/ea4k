@@ -23,7 +23,7 @@ object Generator {
         recurGen = { depth, ret ->
             if (condition(height, depth)) {
                 val terminalOpts = pset.getTerminalAssignableTo(ret)
-                if (terminalOpts == null || terminalOpts.size == 0) {
+                if (terminalOpts.isEmpty()) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a terminal of type $ret, but there is " +
                             "none available.")
@@ -32,7 +32,7 @@ object Generator {
                 pickedTerminal.createNode(listOf())
             } else {
                 val primitiveOpts = pset.getPrimitiveAssignableTo(ret)
-                if (primitiveOpts == null || primitiveOpts.size == 0) {
+                if (primitiveOpts.isEmpty()) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a primitive of type '$ret', but there is " +
                             "none available.".format(ret))
@@ -70,7 +70,7 @@ object Generator {
      */
     fun <R> genGrow(pset: PSet<R>, min: Int, max: Int, type: NodeType): TreeNode<*> {
         val cond: (Int, Int) -> Boolean = { h, d ->
-            d == h || (d >= min && Random.nextFloat() < pset.terminalRatio)
+            d == h || (d >= min && Random.nextDouble() < pset.terminalRatio)
         }
         return generate(pset, min, max, cond, type)
     }
@@ -86,7 +86,7 @@ object Generator {
      * @returns: Either, a full or a grown tree.
      */
     fun <R> genHalfAndHalf(pset: PSet<R>, min: Int, max: Int, type: NodeType): TreeNode<*> {
-        if (Random.nextFloat() < 0.5) {
+        if (Random.nextDouble() < 0.5) {
             return genGrow(pset, min, max, type)
         }
         return genFull(pset, min, max, type)

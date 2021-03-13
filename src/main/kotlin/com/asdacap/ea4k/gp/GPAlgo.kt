@@ -39,8 +39,8 @@ object Mutator {
             val tr2Child = randomChoice(tr2TypeMap[chosenType]!!)
 
             return Pair(
-                tr1.replaceChild(tr1Child, tr2Child) as TreeNode<R>,
-                tr2.replaceChild(tr2Child, tr1Child) as TreeNode<R>
+                tr1.replaceChild(tr1Child, tr2Child),
+                tr2.replaceChild(tr2Child, tr1Child)
             )
         }
 
@@ -54,7 +54,7 @@ object Mutator {
      * @param expr A function object that can generate an subtree when called.
      * @return A tree.
      */
-    fun mutUniform(treeNode: TreeNode<*>, expr: (NodeType) -> TreeNode<*>): TreeNode<*> {
+    fun <R> mutUniform (treeNode: TreeNode<R>, expr: (NodeType) -> TreeNode<*>): TreeNode<R> {
         val allSub = treeNode.iterateAll()
         val selected = randomChoice(allSub);
         val returnType = selected.factory.returnType

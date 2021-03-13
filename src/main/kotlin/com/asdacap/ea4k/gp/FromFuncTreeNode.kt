@@ -38,7 +38,7 @@ class FromFuncTreeNode <R>(
             constant: R,
             type: NodeType = KotlinNodeType(typeOf<R>())
         ): Factory<R> {
-            return Factory({ input ->
+            return Factory({
                 constant
             }, type, listOf())
         }
@@ -56,6 +56,7 @@ class FromFuncTreeNode <R>(
             newArray[i] = childrenArray[i].evaluate()
             i++
         }
+        @Suppress("UNCHECKED_CAST")
         return func.invoke(newArray as Array<Any>)
     }
 

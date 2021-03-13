@@ -11,7 +11,7 @@ class FromFuncTreeNodeFactoryTest {
         return n1 + n2
     }
 
-    fun lazyPrimitive(input: Array<Any>): Int {
+    fun lazyPrimitive(item: Array<Any>): Int {
         return 0
     }
 
@@ -37,9 +37,7 @@ class FromFuncTreeNodeFactoryTest {
 
     @Test
     fun testMainConstructorDetectReturnTypeCorrectlyWithClosure() {
-        val factory = FromFuncTreeNode.Factory({ inputs ->
-            1f
-        })
+        val factory = FromFuncTreeNode.Factory({ 1 })
         assertEquals(KotlinNodeType(typeOf<Float>()), factory.returnType)
     }
 

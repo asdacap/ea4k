@@ -66,7 +66,7 @@ class GPTest {
             mateCutoff(::cxOnePoint, ::nodeFilter)
         ).withMutate {
             mutateCutoff({
-                mutUniform(it, ::treeGenerator) as TreeNode<NodeFunction<Float>>
+                mutUniform(it, ::treeGenerator)
             }, ::nodeFilter) (it)
         }.withOnGeneration {
             val minValue = it.sortedBy { it.fitness!! }.first()
@@ -77,12 +77,13 @@ class GPTest {
 
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
+            @Suppress("UNCHECKED_CAST")
             (1..populationCount).map { IndividualWithFitness(treeGenerator() as TreeNode<NodeFunction<Float>>, null) },
             experiment,
             mu = populationCount,
             lambda_ = populationCount * 2,
-            cxpb = 0.8f,
-            mutpb = 0.1f,
+            cxpb = 0.8,
+            mutpb = 0.1,
             ngen = 100
         )
 

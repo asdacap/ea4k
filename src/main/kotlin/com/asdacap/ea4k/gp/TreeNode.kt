@@ -32,12 +32,12 @@ abstract class TreeNode<out R> {
     /**
      * Create a copy of this treeNode with its children replaced
      */
-    abstract fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<out R>
+    abstract fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<R>
 
     /**
      * Create a copy of this treeNode with its children on the particular index swapped
      */
-    open fun replaceChild(index: Int, replaceWith: TreeNode<*>): TreeNode<out R> {
+    open fun replaceChild(index: Int, replaceWith: TreeNode<*>): TreeNode<R> {
         return replaceChildren(children.mapIndexed { cIndex, baseTreeNode ->
             if (cIndex == index) {
                 replaceWith
@@ -52,10 +52,11 @@ abstract class TreeNode<out R> {
      * Returns a copy of this tree node if a child in the subtree is replaced. Return same object as this tree node
      * if that is not the case.
      */
-    fun replaceChild(toReplace: TreeNode<*>, replaceWith: TreeNode<*>): TreeNode<*> {
+    fun <R2> replaceChild(toReplace: TreeNode<R2>, replaceWith: TreeNode<R2>): TreeNode<R> {
         // No change
         if (this === toReplace) {
-            return replaceWith
+            @Suppress("UNCHECKED_CAST")
+            return replaceWith as TreeNode<R>
         }
 
         // This does mean that only one replacement is done
