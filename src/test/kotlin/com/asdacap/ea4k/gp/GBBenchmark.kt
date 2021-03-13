@@ -48,12 +48,12 @@ class GBBenchmark {
     @Test
     fun testHigherOrderIntegerAdd() {
         val factory = FromFuncTreeNode.factoryFromFunction(this::higherOrderPrimitive)
-        var cnode = createConstantTreeNode({ 1 } as (CallCtx) -> Int, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
+        var cnode = createConstantTreeNode({ ctx: CallCtx -> 1 }, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
         (1..1000).forEach {
             cnode = factory.createNode(
                 listOf(
                     cnode,
-                    createConstantTreeNode({ 1 } as (CallCtx) -> Int, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
+                    createConstantTreeNode({ ctx: CallCtx -> 1 }, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
                 ))
         }
 

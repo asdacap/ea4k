@@ -23,7 +23,7 @@ class GeneratorTreeNode<R>(
     }
 
     override fun evaluate(): NodeFunction<R> {
-        return NodeFunction { constant }
+        return ConstantNodeFunction(constant)
     }
 
     override fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<NodeFunction<R>> {

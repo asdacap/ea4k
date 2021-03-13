@@ -4,7 +4,9 @@ import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantTreeNode
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
 import com.asdacap.ea4k.gp.functional.CallCtx
+import com.asdacap.ea4k.gp.functional.ConstantNodeFunction
 import com.asdacap.ea4k.gp.functional.FunctionNodeType.Companion.functionalNodeTypeFromKType
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromConstant
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
@@ -37,5 +39,20 @@ class FunctionTreeNodeConstructorTest {
     fun testCommonBehaviour() {
         val factory = FunctionTreeNodeConstructors.fromKCallable(this::primitive)
         testCommonNodeBehaviour(factory, listOf(createConstantTreeNode(0), createConstantTreeNode(1)))
+    }
+
+    @Test
+    fun testConstantOptimization() {
+        val constant1Factory = fromConstant(2)
+        val constant2Factory = fromConstant(3)
+        val constant1 = constant1Factory.createNode(listOf())
+        val constant2 = constant2Factory.createNode(listOf())
+
+        val factory = FunctionTreeNodeConstructors.fromKCallable(this::primitive)
+        assertTrue(functionalNodeTypeFromKType(typeOf<Int>()).isAssignableTo(factory.returnType))
+        val node = factory.createNode(listOf(constant1, constant2))
+        val evaluated = node.evaluate()
+        assertTrue(evaluated is ConstantNodeFunction && evaluated.constant == 5)
+        assertEquals(node.evaluate().call(CallCtx()), 5)
     }
 }

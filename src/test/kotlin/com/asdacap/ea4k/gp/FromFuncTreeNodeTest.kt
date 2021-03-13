@@ -37,7 +37,7 @@ class FromFuncTreeNodeTest {
 
     @Test
     fun testMainConstructorDetectReturnTypeCorrectlyWithClosure() {
-        val factory = FromFuncTreeNode.Factory({ 1 })
+        val factory = FromFuncTreeNode.Factory({ 1f })
         assertEquals(KotlinNodeType(typeOf<Float>()), factory.returnType)
     }
 
