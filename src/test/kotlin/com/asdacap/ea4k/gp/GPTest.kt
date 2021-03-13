@@ -13,10 +13,9 @@ import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromGenerator
 import com.asdacap.ea4k.gp.functional.CallCtx
 import com.asdacap.ea4k.gp.functional.NodeFunction
 import com.asdacap.ea4k.gp.functional.FunctionNodeType
-import org.junit.jupiter.api.RepeatedTest
+import com.asdacap.ea4k.gp.functional.FunctionNodeType.Companion.functionalNodeTypeFromKType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import java.io.File
 import kotlin.random.Random
 import kotlin.random.Random.Default.nextDouble
 import kotlin.random.Random.Default.nextFloat
@@ -25,7 +24,7 @@ import kotlin.reflect.typeOf
 class GPTest {
     val MAX_SIZE = 100
 
-    val pset = PSet<(Float) -> Float>(KotlinNodeType(typeOf<(Float) -> Float>()))
+    val pset = PSet<NodeFunction<Float>>(functionalNodeTypeFromKType(typeOf<Float>()))
 
     fun multiply(n1: Float, n2: Float): Float = n1 * n2
     fun add(n1: Float, n2: Float): Float = n1 + n2

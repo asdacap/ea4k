@@ -2,7 +2,6 @@ package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.gp.Utils.objectMapper
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 /**

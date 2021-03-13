@@ -65,7 +65,7 @@ assert(result.sortedBy { it.fitness }.first().fitness!! < 0.1f)
 class GPTest {
     val MAX_SIZE = 100
 
-    val pset = PSet<(Float) -> Float>(KotlinNodeType(typeOf<(Float) -> Float>()))
+    val pset = PSet<NodeFunction<Float>>(functionalNodeTypeFromKType(typeOf<Float>()))
 
     fun multiply(n1: Float, n2: Float): Float = n1 * n2
     fun add(n1: Float, n2: Float): Float = n1 + n2
