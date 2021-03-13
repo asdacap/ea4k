@@ -10,26 +10,21 @@ import kotlin.random.Random.Default.nextFloat
 
 internal class AlgorithmsKtTest {
 
-    val sphereBenchmark = FunctionalToolbox<List<Float>, Float>(
-        evaluateFn = {
-            it.map { it*it }.sum()
-        },
-        selectFn = { list, k ->
-            selTournament(list, k, 10, compareBy { it.fitness!! * -1 })
-        },
-        mateFn = { id1, id2 ->
-            cxUniform(id1, id2, 0.5)
-        },
-        mutateFn = {
-            it.map {
-                if (nextFloat() < 0.5f) {
-                    nextFloat()
-                } else {
-                    it
-                }
+    val sphereBenchmark = toolboxWithEvaluate<List<Float>, Float> {
+        it.map { it*it }.sum()
+    }.withSelect { list, k ->
+        selTournament(list, k, 10, compareBy { it.fitness!! * -1 })
+    }.withMate { id1, id2 ->
+        cxUniform(id1, id2, 0.5)
+    }.withMutate {
+        it.map {
+            if (nextFloat() < 0.5f) {
+                nextFloat()
+            } else {
+                it
             }
         }
-    )
+    }
 
     /**
      * Simple test for simple case
@@ -45,8 +40,8 @@ internal class AlgorithmsKtTest {
         val result = eaSimple(
             startingPop.map { IndividualWithFitness(it, null) },
             sphereBenchmark,
-            cxpb = 0.3f,
-            mutpb = 0.2f,
+            cxpb = 0.3,
+            mutpb = 0.2,
             ngen = 100
         )
 
@@ -69,8 +64,8 @@ internal class AlgorithmsKtTest {
             sphereBenchmark,
             mu = 100,
             lambda_ = 200,
-            cxpb = 0.3f,
-            mutpb = 0.2f,
+            cxpb = 0.3,
+            mutpb = 0.2,
             ngen = 100
         )
 
@@ -93,8 +88,8 @@ internal class AlgorithmsKtTest {
             sphereBenchmark,
             mu = 100,
             lambda_ = 200,
-            cxpb = 0.3f,
-            mutpb = 0.2f,
+            cxpb = 0.3,
+            mutpb = 0.2,
             ngen = 100
         )
 

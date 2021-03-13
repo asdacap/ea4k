@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val kotlinVersion = "1.4.21"
 
 plugins {
     kotlin("jvm") version "1.4.21"
@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.asdacap"
-version = "0.0.4-alpha"
+version = "0.0.5-alpha"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -20,17 +20,8 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.3.0-rc1")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.21")
-    implementation("org.apache.commons:commons-csv:1.8")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.12.1")
-    implementation("io.github.cdimascio:java-dotenv:5.2.2")
-
-    runtimeOnly("org.jetbrains.kotlin:kotlin-main-kts:1.4.21")
-    runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223:1.4.21")
-
-    testRuntimeOnly("org.jetbrains.kotlin:kotlin-main-kts:1.4.21")
-    testRuntimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223:1.4.21")
+    api("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    api("com.fasterxml.jackson.core:jackson-databind:2.10.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
@@ -41,7 +32,7 @@ tasks.test {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "1.6"
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

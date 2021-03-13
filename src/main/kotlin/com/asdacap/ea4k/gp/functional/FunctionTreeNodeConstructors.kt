@@ -1,9 +1,10 @@
-package com.asdacap.ea4k.gp.function
+package com.asdacap.ea4k.gp.functional
 
-import com.asdacap.ea4k.gp.*
-import com.asdacap.ea4k.gp.Function
-import com.asdacap.ea4k.gp.functional.FunctionGeneratorTerminalFactory
-import com.asdacap.ea4k.gp.functional.FunctionNodeType
+import com.asdacap.ea4k.gp.FromFuncTreeNode
+import com.asdacap.ea4k.gp.KotlinNodeType
+import com.asdacap.ea4k.gp.NodeType
+import com.asdacap.ea4k.gp.TreeNode
+import com.asdacap.ea4k.gp.TreeNodeFactory
 import com.asdacap.ea4k.gp.functional.FunctionNodeType.Companion.functionalNodeTypeFromKType
 import kotlin.reflect.KCallable
 import kotlin.reflect.full.createType
@@ -15,104 +16,188 @@ import kotlin.reflect.typeOf
  * The TreeNode then basically create function from other function.
  * The resulting function may have little to no reflection overhead which makes it really fast.
  *
- * The resulting function will accept a single parameter, which is of type CallCtx. The input of the function
- * can then be put in the CallCtx.
+ * The resulting function will accept a single parameter, which is of type CallCtx. The input of the function tree
+ * can then be put in the CallCtx. All constructors here will enclose the given NodeType into FunctionNodeType.
  */
 object FunctionTreeNodeConstructors {
 
     /**
      * Create a function tree node factory from a lambda that itself accept a list of other function.
-     * This should be the fastest method. It also allow the handling function to skip some child evaluation
+     * This should be the fastest method.
+     * It also allow the handling function to skip some child evaluation
      * for example, for an AND predicate, if one child already get a false, the other child no longer need to be evaluated.
+     *
+     * If `pure` is set to true (which is the default) and all its input is a ConstantNodeFunction, this function
+     * will attempt to preemptively call the function and store the result in a ConstantNodeFunction, which
+     * may cut some evaluation time. This apply to other `fromFunction` variant as well.
      */
     inline fun <reified R> fromFunctionMaker(
-        crossinline func: (Array<Function<Any>>) -> Function<R>,
+        crossinline func: (Array<NodeFunction<Any>>) -> NodeFunction<R>,
         args: List<NodeType>,
-        returnType: NodeType = functionalNodeTypeFromKType(typeOf<R>())
-    ): FromFuncTreeNodeFactory<Function<R>> {
-        return FromFuncTreeNodeFactory({ input ->
-            input.map {
-                (it as Function<Any>)
-            }.toTypedArray().let { inputVals ->
+        returnType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>()),
+        pure: Boolean = true,
+    ): TreeNodeFactory<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({ input ->
+            val inputVals = input.map {
+                (it as NodeFunction<Any>)
+            }.toTypedArray()
+
+            if (pure && inputVals.all { it is ConstantNodeFunction }) {
+                ConstantNodeFunction(func(inputVals).call(CallCtx()))
+            } else {
                 func(inputVals)
             }
-        }, returnType, args.map { FunctionNodeType(it) })
+        }, FunctionNodeType(returnType), args.map { FunctionNodeType(it) })
     }
 
     /**
      * Create a function tree node factory from a lambda that will be used in the generated function.
-     * This is a special case with special implementation because it is a lot faster than fromFunction
      */
-    inline fun <reified R, I1, I2> fromBinaryFunction(
-        noinline func: (I1, I2) -> R,
-        args: List<NodeType> = func.reflect()!!.parameters.map { functionalNodeTypeFromKType(it.type) },
-        returnType: NodeType = functionalNodeTypeFromKType(typeOf<R>())
-    ): FromFuncTreeNodeFactory<Function<R>> {
-        return FromFuncTreeNodeFactory({ input ->
-            val arg1 = input[0] as Function<I1>
-            val arg2 = input[1] as Function<I2>
+    inline fun <reified R, I> fromFunction(
+        noinline func: (I) -> R,
+        returnType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>()),
+        args: List<NodeType> = func.reflect()!!.parameters.map { NodeType.fromKotlinNodeType(it.type) },
+        pure: Boolean = true,
+    ): TreeNodeFactory<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({ input ->
+            if (pure && input.all { it is ConstantNodeFunction<*> }) {
+                val constantInput = (input[0] as NodeFunction<I>).call(CallCtx())
 
-            Function { ctx: CallCtx ->
-                func(arg1.call(ctx), arg2.call(ctx))
+                ConstantNodeFunction(func(constantInput))
+            } else {
+                val arg1 = input[0] as NodeFunction<I>
+
+                NodeFunction { ctx: CallCtx ->
+                    func(arg1.call(ctx))
+                }
             }
-        }, returnType, args)
+        }, FunctionNodeType(returnType), args.map { FunctionNodeType(it) })
+    }
+
+    /**
+     * Create a function tree node factory from a lambda that will be used in the generated function.
+     */
+    inline fun <reified R, I1, I2> fromFunction(
+        noinline func: (I1, I2) -> R,
+        returnType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>()),
+        args: List<NodeType> = func.reflect()!!.parameters.map { NodeType.fromKotlinNodeType(it.type) },
+        pure: Boolean = true,
+    ): TreeNodeFactory<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({ input ->
+            if (pure && input.all { it is ConstantNodeFunction<*> }) {
+                val constantInput = (input[0] as NodeFunction<I1>).call(CallCtx())
+                val constantInput2 = (input[1] as NodeFunction<I2>).call(CallCtx())
+
+                ConstantNodeFunction(func(constantInput, constantInput2))
+            } else {
+                val arg1 = input[0] as NodeFunction<I1>
+                val arg2 = input[1] as NodeFunction<I2>
+
+                NodeFunction { ctx: CallCtx ->
+                    func(arg1.call(ctx), arg2.call(ctx))
+                }
+            }
+        }, FunctionNodeType(returnType), args.map { FunctionNodeType(it) })
+    }
+
+    /**
+     * Create a function tree node factory from a lambda that will be used in the generated function.
+     */
+    inline fun <reified R, I1, I2, I3> fromFunction(
+        noinline func: (I1, I2, I3) -> R,
+        returnType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>()),
+        args: List<NodeType> = func.reflect()!!.parameters.map { NodeType.fromKotlinNodeType(it.type) },
+        pure: Boolean = true,
+    ): TreeNodeFactory<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({ input ->
+            if (pure && input.all { it is ConstantNodeFunction<*> }) {
+                val constantInput = (input[0] as NodeFunction<I1>).call(CallCtx())
+                val constantInput2 = (input[1] as NodeFunction<I2>).call(CallCtx())
+                val constantInput3 = (input[2] as NodeFunction<I3>).call(CallCtx())
+
+                ConstantNodeFunction(func(constantInput, constantInput2, constantInput3))
+            } else {
+                val arg1 = input[0] as NodeFunction<I1>
+                val arg2 = input[1] as NodeFunction<I2>
+                val arg3 = input[1] as NodeFunction<I3>
+
+                NodeFunction { ctx: CallCtx ->
+                    func(arg1.call(ctx), arg2.call(ctx), arg3.call(ctx))
+                }
+            }
+        }, FunctionNodeType(returnType), args.map { FunctionNodeType(it) })
     }
 
     /**
      * Create a function tree node factory from that uses the passed in function.
-     * The resulting function have some overhead.
+     * The resulting function have some call overhead.
      */
-    inline fun <reified R> fromFunction(func: KCallable<R>): FromFuncTreeNodeFactory<Function<R>> {
-        val args = func.parameters.map { functionalNodeTypeFromKType(it.type) }
-        return FromFuncTreeNodeFactory({ input ->
-            input.map {
-                (it as Function<Any>)
-            }.toTypedArray().let { inputValProducer ->
-                arrayOfNulls<Any>(inputValProducer.size).let { inputVals ->
-                    Function { callCtx: CallCtx ->
-                        var i = 0
-                        while (i < args.size) {
-                            inputVals[i] = inputValProducer[i].call(callCtx)
-                            i++
-                        }
-                        func.call(*inputVals)
+    inline fun <reified R> fromKCallable(
+        func: KCallable<R>,
+        returnType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>()),
+        args: List<NodeType> = func.parameters.map { NodeType.fromKotlinNodeType(it.type) },
+        pure: Boolean = true,
+    ): TreeNodeFactory<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({ input ->
+            if (pure && input.all { it is ConstantNodeFunction<*> }) {
+                val inputVals = input.map {
+                    (it as ConstantNodeFunction<Any>).call(CallCtx())
+                }.toTypedArray()
+
+                ConstantNodeFunction(func.call(*inputVals))
+            } else {
+                val inputValProducer = input.map {
+                    (it as NodeFunction<Any>)
+                }.toTypedArray()
+
+                val inputVals = arrayOfNulls<Any>(inputValProducer.size)
+
+                NodeFunction { callCtx: CallCtx ->
+                    var i = 0
+                    while (i < args.size) {
+                        inputVals[i] = inputValProducer[i].call(callCtx)
+                        i++
                     }
+                    func.call(*inputVals)
                 }
             }
-        }, functionalNodeTypeFromKType(typeOf<R>()), args)
+        }, FunctionNodeType(returnType), args.map { FunctionNodeType(it) })
     }
 
     /**
-     * Create a function tree node that finally extract the input of the whole tree from the CallCtx
+     * Create a function tree node that extract the input of the whole tree from the CallCtx
      * This is basically the tree terminal that gets input.
      */
-    inline fun <reified R> fromArgs(argIdx: Int): FromFuncTreeNodeFactory<Function<R>> {
-        return FromFuncTreeNodeFactory({ input ->
-            Function { ctx ->
+    inline fun <reified R> fromArgs(argIdx: Int, nodeType: NodeType = NodeType.fromKotlinNodeType(typeOf<R>())): TreeNodeFactory<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({
+            NodeFunction { ctx ->
                 ctx.args[argIdx] as R
             }
-        }, functionalNodeTypeFromKType(typeOf<R>()))
+        }, FunctionNodeType(nodeType))
     }
 
     /**
      * Create a tree node factory that creates a function tree node that always return the constant specified
      */
-    inline fun <reified R> createConstantProducer(constant: R): FromFuncTreeNodeFactory<Function<R>> {
-        return fromFunctionMaker({ Function { constant } }, listOf())
-    }
-
-    fun <R> createConstantTreeNode(constant: R, type: NodeType = FunctionNodeType(KotlinNodeType(constant!!::class.createType())))
-            : BaseTreeNode<Function<R>> {
-        return FromFuncTreeNodeFactory({ input ->
-            Function { constant }
-        }, type).createNode(listOf())
+    inline fun <reified R> fromConstant(constant: R): TreeNodeFactory<NodeFunction<R>> {
+        return fromFunctionMaker({ ConstantNodeFunction(constant) }, listOf())
     }
 
     /**
      * Create a function tree node that finally extract the input of the whole tree from the CallCtx
      * This is basically the tree terminal that gets input.
      */
-    inline fun <reified R: Any> fromGenerator(noinline generator: () -> R): TreeNodeFactory<Function<R>> {
-        return FunctionGeneratorTerminalFactory(generator, functionalNodeTypeFromKType(typeOf<R>()))
+    inline fun <reified R: Any> fromGenerator(noinline generator: () -> R): TreeNodeFactory<NodeFunction<R>> {
+        return GeneratorTreeNode.Factory(generator, returnType = functionalNodeTypeFromKType(typeOf<R>()))
+    }
+
+    /**
+     * Create a tree node that will create a function that always return a constant. Mainly used in testing.
+     */
+    fun <R> createConstantTreeNode(constant: R, type: NodeType = FunctionNodeType(KotlinNodeType(constant!!::class.createType())))
+            : TreeNode<NodeFunction<R>> {
+        return FromFuncTreeNode.Factory({
+            NodeFunction { constant }
+        }, type).createNode(listOf())
     }
 }
