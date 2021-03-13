@@ -1,6 +1,8 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.*
+import com.asdacap.ea4k.Utils.mateCutoff
+import com.asdacap.ea4k.Utils.mutateCutoff
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
 import com.asdacap.ea4k.gp.Mutator.mutUniform
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromConstant
@@ -17,6 +19,7 @@ import kotlin.random.Random.Default.nextFloat
 import kotlin.reflect.typeOf
 
 class GPTest {
+    val MAX_SIZE = 100
 
     val pset = PSet<(Float) -> Float>(KotlinNodeType(typeOf<(Float) -> Float>()))
 
@@ -38,51 +41,39 @@ class GPTest {
         return Generator.genHalfAndHalf(pset, 0, 2, nodeType)
     }
 
-    val MAX_SIZE = 100
-    val experiment = toolboxWithEvaluate<TreeNode<NodeFunction<Float>>, Float>
-    { individual ->
+    fun targetEquation(inp: Float) = inp * (inp + 1) * (inp - 99)
+    fun nodeFilter(ind: TreeNode<NodeFunction<Float>>) = ind.size < MAX_SIZE
+
+    fun evaluate(individual: TreeNode<NodeFunction<Float>>): Float {
         val rand = Random(0)
-        (0..5).map {
+        return (0..5).map {
             val inp = rand.nextFloat() * 100
-            val answer = inp * (inp + 1) * (inp - 99) // The equation to guess
+            val answer = targetEquation(inp) // The equation to guess
             val test = individual.evaluate().call(CallCtx(arrayOf(inp)))
             val diff = answer - test
             diff * diff
         }.sum()
-    }.withSelect { list, k ->
-        Selection.selTournament(list, k, 5, compareBy { it.fitness!! * -1 })
-    }.withMate { id1, id2 ->
-        var (c1, c2) = cxOnePoint(id1, id2)
-        c1 = if (c1.size > MAX_SIZE) {
-            id1
-        } else {
-            c1
-        }
-        c2 = if (c2.size > MAX_SIZE) {
-            id2
-        } else {
-            c2
-        }
-        c1 to c2
-    }.withMutate {
-        var result = mutUniform(it, ::treeGenerator) as TreeNode<NodeFunction<Float>>
-        if (result.size > MAX_SIZE) {
-            it
-        } else {
-            result
-        }
-    }.withOnGeneration {
-        val minValue = it.sortedBy { it.fitness!! }.first()
-        System.out.println(minValue.fitness)
-        val asJson = pset.serialize(minValue.individual)
-        File("ind.json").writeText(asJson.toPrettyString())
     }
 
-    /**
-     * Simple test for simple case
-     */
     @Test
     fun testBasic() {
+        val experiment = toolboxWithEvaluate<TreeNode<NodeFunction<Float>>, Float>
+        { individual ->
+            evaluate(individual)
+        }.withSelect { list, k ->
+            Selection.selTournament(list, k, 5, compareBy { it.fitness!! * -1 })
+        }.withMate(
+            mateCutoff(::cxOnePoint, ::nodeFilter)
+        ).withMutate {
+            mutateCutoff({
+                mutUniform(it, ::treeGenerator) as TreeNode<NodeFunction<Float>>
+            }, ::nodeFilter) (it)
+        }.withOnGeneration {
+            val minValue = it.sortedBy { it.fitness!! }.first()
+            System.out.println(minValue.fitness)
+            val asJson = pset.serialize(minValue.individual)
+            File("ind.json").writeText(asJson.toPrettyString())
+        }
 
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
