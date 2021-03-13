@@ -9,6 +9,7 @@ What has been implemented
 
 - Most of the main evolutionary algorithms.
 - Rewrote the tree-based structure for Kotlin use.
+- Created a functional tree factories which generate tree that evaluate to function for reflection-free evaluation.
 
 What is different
 -----------------
