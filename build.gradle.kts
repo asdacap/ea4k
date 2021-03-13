@@ -19,7 +19,6 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.fasterxml.jackson.core:jackson-core:2.10.1")
 
     api("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     api("com.fasterxml.jackson.core:jackson-databind:2.10.1")

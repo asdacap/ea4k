@@ -20,9 +20,9 @@ abstract class TreeNode<out R> {
     open val children: List<TreeNode<*>> = listOf()
 
     /**
-     * The state of the node if any
+     * The state of the node. If the node does not store any state, then return an empty json object node.
      */
-    open val state: JsonNode = objectMapper.createObjectNode()
+    open val state: JsonNode = Utils.objectMapper.createObjectNode()
 
     /**
      * Evaluate the result of this tree node. Tree node generally will take into account its child to get the result.
@@ -45,6 +45,36 @@ abstract class TreeNode<out R> {
                 baseTreeNode
             }
         })
+    }
+
+    /**
+     * Replace a child in this subtree with the given subtree. The child is selected by reference equality.
+     * Returns a copy of this tree node if a child in the subtree is replaced. Return same object as this tree node
+     * if that is not the case.
+     */
+    fun replaceChild(toReplace: TreeNode<*>, replaceWith: TreeNode<*>): TreeNode<*> {
+        // No change
+        if (this === toReplace) {
+            return replaceWith
+        }
+
+        // This does mean that only one replacement is done
+        var replaced = false
+        val newChilds = children.map {
+            if (replaced) {
+                it
+            } else {
+                val newChild = it.replaceChild(toReplace, replaceWith)
+                if (newChild !== it) {
+                    replaced = true
+                }
+                newChild
+            }
+        }
+        if (replaced) {
+            return replaceChildren(newChilds)
+        }
+        return this
     }
 
     /**
@@ -92,28 +122,4 @@ abstract class TreeNode<out R> {
      * Return the height of this subTree
      */
     val height: Int by lazy { (children.maxOfOrNull { it.height } ?: 0) + 1 }
-}
-
-fun TreeNode<*>.replaceChild(toReplace: TreeNode<*>, replaceWith: TreeNode<*>): TreeNode<*> {
-    if (this === toReplace) {
-        return replaceWith
-    }
-
-    // This does mean that only one replacement is done
-    var replaced = false
-    val newChilds = children.map {
-        if (replaced) {
-            it
-        } else {
-            val newChild = it.replaceChild(toReplace, replaceWith)
-            if (newChild !== it) {
-                replaced = true
-            }
-            newChild
-        }
-    }
-    if (replaced) {
-        return replaceChildren(newChilds)
-    }
-    return this
 }

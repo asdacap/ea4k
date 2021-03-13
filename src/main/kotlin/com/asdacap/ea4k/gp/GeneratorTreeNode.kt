@@ -14,8 +14,8 @@ class GeneratorTreeNode<R>(
     override val factory: TreeNodeFactory<NodeFunction<R>>,
 ): TreeNode<NodeFunction<R>>() {
     override val state: JsonNode by lazy {
-        val value = objectMapper.createObjectNode()
-        value.set<JsonNode>("constant", objectMapper.valueToTree(constant))
+        val value = Utils.objectMapper.createObjectNode()
+        value.set<JsonNode>("constant", Utils.objectMapper.valueToTree(constant))
         value
     }
 
@@ -37,7 +37,7 @@ class GeneratorTreeNode<R>(
                 generator()
             } else {
                 val constantState = state.get("constant")
-                objectMapper.treeToValue(constantState, kotlinReturnType) as R
+                Utils.objectMapper.treeToValue(constantState, kotlinReturnType) as R
             }
 
             return GeneratorTreeNode(constant, this)

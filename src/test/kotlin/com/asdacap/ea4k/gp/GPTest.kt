@@ -3,7 +3,7 @@ package com.asdacap.ea4k.gp
 import com.asdacap.ea4k.*
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
 import com.asdacap.ea4k.gp.Mutator.mutUniform
-import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantProducer
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromConstant
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromFunction
 import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromGenerator
@@ -29,8 +29,8 @@ class GPTest {
         pset.addTreeNodeFactory("Mul", fromFunction(::multiply))
         pset.addTreeNodeFactory("Add", fromFunction(::add))
         pset.addTreeNodeFactory("Sub", fromFunction(::subtract))
-        pset.addTreeNodeFactory("Constant1", createConstantProducer(1.0f))
-        pset.addTreeNodeFactory("ConstantNeg99", createConstantProducer(-99.0f))
+        pset.addTreeNodeFactory("Constant1", fromConstant(1.0f))
+        pset.addTreeNodeFactory("ConstantNeg99", fromConstant(-99.0f))
         pset.addTreeNodeFactory("Random", fromGenerator { nextFloat() })
     }
 
@@ -76,10 +76,12 @@ class GPTest {
             }
         },
         onGenerationFn = {
+            /*
             val minValue = it.sortedBy { it.fitness!! }.first()
             System.out.println(minValue.fitness)
             val asJson = pset.serializeToJson(minValue.individual)
             File("ind.json").writeText(asJson.toPrettyString())
+             */
         }
     )
 
@@ -95,8 +97,8 @@ class GPTest {
             sqrtExperiment,
             mu = populationCount,
             lambda_ = populationCount * 2,
-            cxpb = 0.6f,
-            mutpb = 0.3f,
+            cxpb = 0.8f,
+            mutpb = 0.1f,
             ngen = 100
         )
 

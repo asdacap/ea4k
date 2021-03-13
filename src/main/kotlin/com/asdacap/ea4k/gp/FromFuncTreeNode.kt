@@ -16,24 +16,6 @@ class FromFuncTreeNode <R>(
     override val children: List<TreeNode<*>>,
     override val factory: TreeNodeFactory<R>,
 ) : TreeNode<R>() {
-    val childrenArray = children.toTypedArray()
-
-    override fun evaluate(): R {
-        // Hot code!
-        val size = childrenArray.size
-        val newArray = arrayOfNulls<Any>(size)
-        var i = 0
-        while(i < size) {
-            newArray[i] = childrenArray[i].evaluate()
-            i++
-        }
-        return func.invoke(newArray as Array<Any>)
-    }
-
-    override fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<R> {
-        return FromFuncTreeNode(func, newChildren, factory)
-    }
-
     companion object {
         /**
          * Create a tree node factory from a kotlin KCallable. This will use reflection to detect the callable's
@@ -60,6 +42,25 @@ class FromFuncTreeNode <R>(
                 constant
             }, type, listOf())
         }
+    }
+
+    // Array for optimization reason
+    private val childrenArray = children.toTypedArray()
+
+    override fun evaluate(): R {
+        // Hot code!
+        val size = childrenArray.size
+        val newArray = arrayOfNulls<Any>(size)
+        var i = 0
+        while(i < size) {
+            newArray[i] = childrenArray[i].evaluate()
+            i++
+        }
+        return func.invoke(newArray as Array<Any>)
+    }
+
+    override fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<R> {
+        return FromFuncTreeNode(func, newChildren, factory)
     }
 
     class Factory <R>(

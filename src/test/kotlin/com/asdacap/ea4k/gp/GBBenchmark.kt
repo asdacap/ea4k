@@ -63,7 +63,7 @@ class GBBenchmark {
                 func(CallCtx())
             }
         }
-        println("Higher order took $time ms")
+        println("Manual higher order took $time ms")
     }
 
     @Test
@@ -103,6 +103,6 @@ class GBBenchmark {
                 func.call(CallCtx())
             }
         }
-        println("From func higher order took $time ms")
+        println("Higher order took $time ms")
     }
 }

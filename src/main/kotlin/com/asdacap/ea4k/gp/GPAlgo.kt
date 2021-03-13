@@ -3,14 +3,14 @@ package com.asdacap.ea4k.gp
 import com.asdacap.ea4k.Utils.randomChoice
 
 object Mutator {
+    /**
+     * Randomly select crossover point in each individual and exchange each
+     * subtree with the point as root between each individual.
+     * @param ind1 First tree participating in the crossover.
+     * @param ind2 Second tree participating in the crossover.
+     * @return A tuple of two trees.
+     */
     fun <R> cxOnePoint(tr1: TreeNode<R>, tr2: TreeNode<R>): Pair<TreeNode<R>, TreeNode<R>> {
-        """Randomly select crossover point in each individual and exchange each
-    subtree with the point as root between each individual.
-    :param ind1: First tree participating in the crossover.
-    :param ind2: Second tree participating in the crossover.
-    :returns: A tuple of two trees.
-    """
-
         if (tr1.size == 1 || tr2.size == 1) {
             // No crossover on single node tree
             return Pair(tr1, tr2)
@@ -35,40 +35,26 @@ object Mutator {
         if (commonTypes.size > 0) {
             val chosenType = randomChoice(commonTypes.toList());
 
-            val tr1Idx = randomChoice(tr1TypeMap[chosenType]!!)
-            val tr2Idx = randomChoice(tr2TypeMap[chosenType]!!)
+            val tr1Child = randomChoice(tr1TypeMap[chosenType]!!)
+            val tr2Child = randomChoice(tr2TypeMap[chosenType]!!)
 
-            // This does mean that the top level node can never be swapped
             return Pair(
-                tr1.replaceChild(tr1Idx, tr2Idx) as TreeNode<R>,
-                tr2.replaceChild(tr2Idx, tr1Idx) as TreeNode<R>
+                tr1.replaceChild(tr1Child, tr2Child) as TreeNode<R>,
+                tr2.replaceChild(tr2Child, tr1Child) as TreeNode<R>
             )
         }
 
         return Pair(tr1, tr2)
     }
 
-/*
-######################################
-# GP Mutations                       #
-######################################
-def mutUniform(individual, expr, pset):
-    """Randomly select a point in the tree *individual*, then replace the
-    subtree at that point as a root by the expression generated using method
-    :func:`expr`.
-    :param individual: The tree to be mutated.
-    :param expr: A function object that can generate an expression when
-                 called.
-    :returns: A tuple of one tree.
-    """
-    index = random.randrange(len(individual))
-    slice_ = individual.searchSubtree(index)
-    type_ = individual[index].ret
-    individual[slice_] = expr(pset=pset, type_=type_)
-    return individual,
- */
-
-    fun mutUniform(treeNode: TreeNode<*>, expr: (NodeType) -> TreeNode<*>): TreeNode<*>? {
+    /**
+     * Randomly select a point in the tree *individual*, then replace the
+     * subtree at that point as a root by the expression generated using method *expr*
+     * @param individual The tree to be mutated.
+     * @param expr A function object that can generate an subtree when called.
+     * @return A tree.
+     */
+    fun mutUniform(treeNode: TreeNode<*>, expr: (NodeType) -> TreeNode<*>): TreeNode<*> {
         val allSub = treeNode.iterateAll()
         val selected = randomChoice(allSub);
         val returnType = selected.factory.returnType

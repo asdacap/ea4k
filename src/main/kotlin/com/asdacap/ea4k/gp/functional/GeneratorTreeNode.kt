@@ -3,18 +3,22 @@ package com.asdacap.ea4k.gp.functional
 import com.asdacap.ea4k.gp.NodeType
 import com.asdacap.ea4k.gp.TreeNode
 import com.asdacap.ea4k.gp.TreeNodeFactory
-import com.asdacap.ea4k.gp.objectMapper
+import com.asdacap.ea4k.gp.Utils
 import com.fasterxml.jackson.databind.JsonNode
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.reflect
 
+/**
+ * A tree node that evaluate into a function that always return a constant which is assigned by the factory,
+ * which contains a generator.
+ */
 class GeneratorTreeNode<R>(
     val constant: R,
     override val factory: TreeNodeFactory<NodeFunction<R>>
 ): TreeNode<NodeFunction<R>>() {
     override val state: JsonNode by lazy {
-        val value = objectMapper.createObjectNode()
-        value.set<JsonNode>("constant", objectMapper.valueToTree(constant))
+        val value = Utils.objectMapper.createObjectNode()
+        value.set<JsonNode>("constant", Utils.objectMapper.valueToTree(constant))
         value
     }
 
@@ -40,7 +44,7 @@ class GeneratorTreeNode<R>(
                 generator()
             } else {
                 val constantState = state.get("constant")
-                objectMapper.treeToValue(constantState, kotlinReturnType) as R
+                Utils.objectMapper.treeToValue(constantState, kotlinReturnType) as R
             }
 
             return GeneratorTreeNode(constant, this)
