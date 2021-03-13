@@ -39,51 +39,44 @@ class GPTest {
     }
 
     val MAX_SIZE = 100
-    val sqrtExperiment = FunctionalToolbox<TreeNode<NodeFunction<Float>>, Float>(
-        evaluateFn = { individual ->
-            val rand = Random(0)
-            (0..5).map {
-                val inp = rand.nextFloat() * 100
-                val answer = inp*(inp + 1)*(inp - 99) // The equation to guess
-                val test = individual.evaluate().call(CallCtx(arrayOf(inp)))
-                val diff = answer - test
-                diff * diff
-            }.sum()
-        },
-        selectFn = { list, k ->
-            Selection.selTournament(list, k, 5, compareBy { it.fitness!! * -1 })
-        },
-        mateFn = { id1, id2 ->
-            var (c1, c2) = cxOnePoint(id1, id2)
-            c1 = if (c1.size > MAX_SIZE) {
-                id1
-            } else {
-                c1
-            }
-            c2 = if (c2.size > MAX_SIZE) {
-                id2
-            } else {
-                c2
-            }
-            c1 to c2
-        },
-        mutateFn = {
-            var result = mutUniform(it, ::treeGenerator) as TreeNode<NodeFunction<Float>>
-            if (result.size > MAX_SIZE) {
-                it
-            } else {
-                result
-            }
-        },
-        onGenerationFn = {
-            /*
-            val minValue = it.sortedBy { it.fitness!! }.first()
-            System.out.println(minValue.fitness)
-            val asJson = pset.serializeToJson(minValue.individual)
-            File("ind.json").writeText(asJson.toPrettyString())
-             */
+    val experiment = toolboxWithEvaluate<TreeNode<NodeFunction<Float>>, Float>
+    { individual ->
+        val rand = Random(0)
+        (0..5).map {
+            val inp = rand.nextFloat() * 100
+            val answer = inp * (inp + 1) * (inp - 99) // The equation to guess
+            val test = individual.evaluate().call(CallCtx(arrayOf(inp)))
+            val diff = answer - test
+            diff * diff
+        }.sum()
+    }.withSelect { list, k ->
+        Selection.selTournament(list, k, 5, compareBy { it.fitness!! * -1 })
+    }.withMate { id1, id2 ->
+        var (c1, c2) = cxOnePoint(id1, id2)
+        c1 = if (c1.size > MAX_SIZE) {
+            id1
+        } else {
+            c1
         }
-    )
+        c2 = if (c2.size > MAX_SIZE) {
+            id2
+        } else {
+            c2
+        }
+        c1 to c2
+    }.withMutate {
+        var result = mutUniform(it, ::treeGenerator) as TreeNode<NodeFunction<Float>>
+        if (result.size > MAX_SIZE) {
+            it
+        } else {
+            result
+        }
+    }.withOnGeneration {
+        val minValue = it.sortedBy { it.fitness!! }.first()
+        System.out.println(minValue.fitness)
+        val asJson = pset.serialize(minValue.individual)
+        File("ind.json").writeText(asJson.toPrettyString())
+    }
 
     /**
      * Simple test for simple case
@@ -94,7 +87,7 @@ class GPTest {
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
             (1..populationCount).map { IndividualWithFitness(treeGenerator() as TreeNode<NodeFunction<Float>>, null) },
-            sqrtExperiment,
+            experiment,
             mu = populationCount,
             lambda_ = populationCount * 2,
             cxpb = 0.8f,

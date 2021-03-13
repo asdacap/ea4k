@@ -44,7 +44,7 @@ class PSet<R>(val returnType: NodeType) {
 
     val objectMapper = ObjectMapper()
 
-    fun <R> serializeToJson(tree: TreeNode<R>): JsonNode {
+    fun <R> serialize(tree: TreeNode<R>): JsonNode {
         val factory = serializers.find {
             it.second == tree.factory
         }
@@ -54,7 +54,7 @@ class PSet<R>(val returnType: NodeType) {
         }
 
         val parent = tree.state
-        val childs = tree.children.map { serializeToJson(it) }
+        val childs = tree.children.map { serialize(it) }
 
         val json = objectMapper.createObjectNode()
         val childArray = objectMapper.createArrayNode()
