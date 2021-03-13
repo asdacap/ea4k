@@ -3,7 +3,7 @@ package com.asdacap.ea4k.gp
 import com.asdacap.ea4k.Utils.randomChoice
 
 object Mutator {
-    fun <R> cxOnePoint(tr1: BaseTreeNode<R>, tr2: BaseTreeNode<R>): Pair<BaseTreeNode<R>, BaseTreeNode<R>> {
+    fun <R> cxOnePoint(tr1: TreeNode<R>, tr2: TreeNode<R>): Pair<TreeNode<R>, TreeNode<R>> {
         """Randomly select crossover point in each individual and exchange each
     subtree with the point as root between each individual.
     :param ind1: First tree participating in the crossover.
@@ -16,18 +16,18 @@ object Mutator {
             return Pair(tr1, tr2)
         }
 
-        val tr1TypeMap: MutableMap<NodeType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
-        val tr2TypeMap: MutableMap<NodeType, MutableList<BaseTreeNode<*>>> = mutableMapOf()
+        val tr1TypeMap: MutableMap<NodeType, MutableList<TreeNode<*>>> = mutableMapOf()
+        val tr2TypeMap: MutableMap<NodeType, MutableList<TreeNode<*>>> = mutableMapOf()
         val tr1Types: MutableSet<NodeType> = mutableSetOf();
         val tr2Types: MutableSet<NodeType> = mutableSetOf();
 
         tr1.iterateAll().forEach {
-            tr1TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
-            tr1Types.add(it.returnType)
+            tr1TypeMap.getOrPut(it.factory.returnType, { mutableListOf() }).add(it)
+            tr1Types.add(it.factory.returnType)
         }
         tr2.iterateAll().forEach {
-            tr2TypeMap.getOrPut(it.returnType, { mutableListOf() }).add(it)
-            tr2Types.add(it.returnType)
+            tr2TypeMap.getOrPut(it.factory.returnType, { mutableListOf() }).add(it)
+            tr2Types.add(it.factory.returnType)
         }
 
         val commonTypes = tr1Types.intersect(tr2Types)
@@ -40,8 +40,8 @@ object Mutator {
 
             // This does mean that the top level node can never be swapped
             return Pair(
-                tr1.replaceChild(tr1Idx, tr2Idx) as BaseTreeNode<R>,
-                tr2.replaceChild(tr2Idx, tr1Idx) as BaseTreeNode<R>
+                tr1.replaceChild(tr1Idx, tr2Idx) as TreeNode<R>,
+                tr2.replaceChild(tr2Idx, tr1Idx) as TreeNode<R>
             )
         }
 
@@ -68,17 +68,11 @@ def mutUniform(individual, expr, pset):
     return individual,
  */
 
-    fun mutUniform(treeNode: BaseTreeNode<*>, expr: (NodeType) -> BaseTreeNode<*>): BaseTreeNode<*>? {
+    fun mutUniform(treeNode: TreeNode<*>, expr: (NodeType) -> TreeNode<*>): TreeNode<*>? {
         val allSub = treeNode.iterateAll()
-        if (allSub.size == 0) {
-            return null
-        }
         val selected = randomChoice(allSub);
-        val returnType = selected.returnType
+        val returnType = selected.factory.returnType
         val generated = expr(returnType)
-        if (generated.returnType != returnType) {
-            throw Exception("unexpected return type")
-        }
         return treeNode.replaceChild(selected, generated)
     }
 }

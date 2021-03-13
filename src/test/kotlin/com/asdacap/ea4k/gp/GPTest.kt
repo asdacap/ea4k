@@ -3,10 +3,12 @@ package com.asdacap.ea4k.gp
 import com.asdacap.ea4k.*
 import com.asdacap.ea4k.gp.Mutator.cxOnePoint
 import com.asdacap.ea4k.gp.Mutator.mutUniform
-import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.createConstantProducer
-import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromArgs
-import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromBinaryFunction
-import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors.fromGenerator
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.createConstantProducer
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromArgs
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromFunction
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors.fromGenerator
+import com.asdacap.ea4k.gp.functional.CallCtx
+import com.asdacap.ea4k.gp.functional.NodeFunction
 import com.asdacap.ea4k.gp.functional.FunctionNodeType
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -24,20 +26,20 @@ class GPTest {
 
     init {
         pset.addTreeNodeFactory("ARG0", fromArgs<Float>(0))
-        pset.addTreeNodeFactory("Mul", fromBinaryFunction(::multiply))
-        pset.addTreeNodeFactory("Add", fromBinaryFunction(::add))
-        pset.addTreeNodeFactory("Sub", fromBinaryFunction(::subtract))
+        pset.addTreeNodeFactory("Mul", fromFunction(::multiply))
+        pset.addTreeNodeFactory("Add", fromFunction(::add))
+        pset.addTreeNodeFactory("Sub", fromFunction(::subtract))
         pset.addTreeNodeFactory("Constant1", createConstantProducer(1.0f))
         pset.addTreeNodeFactory("ConstantNeg99", createConstantProducer(-99.0f))
         pset.addTreeNodeFactory("Random", fromGenerator { nextFloat() })
     }
 
-    fun treeGenerator(nodeType: NodeType = FunctionNodeType(KotlinNodeType(typeOf<Float>()))): BaseTreeNode<*> {
+    fun treeGenerator(nodeType: NodeType = FunctionNodeType(KotlinNodeType(typeOf<Float>()))): TreeNode<*> {
         return Generator.genHalfAndHalf(pset, 0, 2, nodeType)
     }
 
     val MAX_SIZE = 100
-    val sqrtExperiment = FunctionalToolbox<BaseTreeNode<Function<Float>>, Float>(
+    val sqrtExperiment = FunctionalToolbox<TreeNode<NodeFunction<Float>>, Float>(
         evaluateFn = { individual ->
             val rand = Random(0)
             (0..5).map {
@@ -66,7 +68,7 @@ class GPTest {
             c1 to c2
         },
         mutateFn = {
-            var result = mutUniform(it, ::treeGenerator) as BaseTreeNode<Function<Float>>
+            var result = mutUniform(it, ::treeGenerator) as TreeNode<NodeFunction<Float>>
             if (result.size > MAX_SIZE) {
                 it
             } else {
@@ -89,7 +91,7 @@ class GPTest {
 
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
-            (1..populationCount).map { IndividualWithFitness(treeGenerator() as BaseTreeNode<Function<Float>>, null) },
+            (1..populationCount).map { IndividualWithFitness(treeGenerator() as TreeNode<NodeFunction<Float>>, null) },
             sqrtExperiment,
             mu = populationCount,
             lambda_ = populationCount * 2,

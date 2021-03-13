@@ -1,23 +1,28 @@
 package com.asdacap.ea4k.gp
 
+import com.fasterxml.jackson.databind.JsonNode
+
 /**
  * The tree node itself.
  * A tree node also represent a tree which can be evaluated to return a result of type R.
  * A tree node should be immmutable.
  */
-abstract class BaseTreeNode<out R> {
+abstract class TreeNode<out R> {
 
-    abstract val treeNodeFactory: TreeNodeFactory<R>
+    /**
+     * A reference to the factory of this tree node
+     */
+    abstract val factory: TreeNodeFactory<R>
 
     /**
      * A list of the treeNode's children.
      */
-    open val children: List<BaseTreeNode<*>> = listOf()
+    open val children: List<TreeNode<*>> = listOf()
 
     /**
-     * Get the returnType of this tree node
+     * The state of the node if any
      */
-    abstract val returnType: NodeType
+    open val state: JsonNode = objectMapper.createObjectNode()
 
     /**
      * Evaluate the result of this tree node. Tree node generally will take into account its child to get the result.
@@ -27,12 +32,12 @@ abstract class BaseTreeNode<out R> {
     /**
      * Create a copy of this treeNode with its children replaced
      */
-    abstract fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<out R>
+    abstract fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<out R>
 
     /**
      * Create a copy of this treeNode with its children on the particular index swapped
      */
-    open fun replaceChild(index: Int, replaceWith: BaseTreeNode<*>): BaseTreeNode<out R> {
+    open fun replaceChild(index: Int, replaceWith: TreeNode<*>): TreeNode<out R> {
         return replaceChildren(children.mapIndexed { cIndex, baseTreeNode ->
             if (cIndex == index) {
                 replaceWith
@@ -46,12 +51,14 @@ abstract class BaseTreeNode<out R> {
      * Return true if this node is effectively the same as the other node.
      * Does not include its children
      */
-    abstract fun isNodeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean
+    open fun isNodeEffectivelySame(otherTree: TreeNode<*>): Boolean {
+        return otherTree.factory == this.factory && otherTree.state == this.state
+    }
 
     /**
      * Return true if this subtree is effectively the same as the otherTree
      */
-    open fun isSubtreeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean {
+    open fun isSubtreeEffectivelySame(otherTree: TreeNode<*>): Boolean {
         return isNodeEffectivelySame(otherTree)
                 && this.children.size == otherTree.children.size
                 && this.children.zip(otherTree.children).all { it.first.isSubtreeEffectivelySame(it.second) }
@@ -62,11 +69,11 @@ abstract class BaseTreeNode<out R> {
      * It also detect cycles
      * Iteration is in postOrder order
      */
-    fun iterateAll(): List<BaseTreeNode<*>> {
+    fun iterateAll(): List<TreeNode<*>> {
         return iterateDfs(mutableSetOf())
     }
 
-    private fun iterateDfs(dedup: MutableSet<BaseTreeNode<*>>): List<BaseTreeNode<*>> {
+    private fun iterateDfs(dedup: MutableSet<TreeNode<*>>): List<TreeNode<*>> {
         if (dedup.contains(this)) {
             throw Exception("Cycle detected!")
         }
@@ -80,9 +87,14 @@ abstract class BaseTreeNode<out R> {
      * Return the size of this subTree
      */
     val size: Int by lazy { children.map { it.size }.sum() + 1 }
+
+    /**
+     * Return the height of this subTree
+     */
+    val height: Int by lazy { (children.maxOfOrNull { it.height } ?: 0) + 1 }
 }
 
-fun BaseTreeNode<*>.replaceChild(toReplace: BaseTreeNode<*>, replaceWith: BaseTreeNode<*>): BaseTreeNode<*> {
+fun TreeNode<*>.replaceChild(toReplace: TreeNode<*>, replaceWith: TreeNode<*>): TreeNode<*> {
     if (this === toReplace) {
         return replaceWith
     }

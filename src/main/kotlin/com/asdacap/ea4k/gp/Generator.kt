@@ -4,7 +4,7 @@ import com.asdacap.ea4k.Utils
 import kotlin.random.Random
 
 object Generator {
-    fun <R> generate(pset: PSet<R>, min: Int, max: Int, condition: (Int, Int) -> Boolean, type: NodeType): BaseTreeNode<*> {
+    fun <R> generate(pset: PSet<R>, min: Int, max: Int, condition: (Int, Int) -> Boolean, type: NodeType): TreeNode<*> {
         /*
         """Generate a Tree as a list of list. The tree is build
         from the root to the leaves, and it stop growing when the
@@ -25,7 +25,7 @@ object Generator {
 
         val height = Random.nextInt(min, max)
 
-        var recurGen: ((Int, NodeType) -> BaseTreeNode<*>)? = null
+        var recurGen: ((Int, NodeType) -> TreeNode<*>)? = null
         recurGen = { depth, ret ->
             if (condition(height, depth)) {
                 val terminalOpts = pset.getTerminalAssignableTo(ret)
@@ -51,7 +51,7 @@ object Generator {
         return recurGen(0, type)
     }
 
-    fun <R> genFull(pset: PSet<R>, min: Int, max: Int, type: NodeType): BaseTreeNode<*> {
+    fun <R> genFull(pset: PSet<R>, min: Int, max: Int, type: NodeType): TreeNode<*> {
         """Generate an expression where each leaf has the same depth
     between *min* and *max*.
     :param pset: Primitive set from which primitives are selected.
@@ -66,7 +66,7 @@ object Generator {
         return generate(pset, min, max, {h, d -> h == d}, type)
     }
 
-    fun <R> genGrow(pset: PSet<R>, min: Int, max: Int, type: NodeType): BaseTreeNode<*> {
+    fun <R> genGrow(pset: PSet<R>, min: Int, max: Int, type: NodeType): TreeNode<*> {
         """Generate an expression where each leaf might have a different depth
     between *min* and *max*.
     :param pset: Primitive set from which primitives are selected.
@@ -100,7 +100,7 @@ object Generator {
         method = random.choice((genGrow, genFull))
         return method(pset, min_, max_, type_)
      */
-    fun <R> genHalfAndHalf(pset: PSet<R>, min: Int, max: Int, type: NodeType): BaseTreeNode<*> {
+    fun <R> genHalfAndHalf(pset: PSet<R>, min: Int, max: Int, type: NodeType): TreeNode<*> {
         if (Random.nextFloat() < 0.5) {
             return genGrow(pset, min, max, type)
         }

@@ -1,7 +1,9 @@
 package com.asdacap.ea4k.gp
 
 import com.asdacap.ea4k.gp.Utils.createConstantTreeNode
-import com.asdacap.ea4k.gp.function.FunctionTreeNodeConstructors
+import com.asdacap.ea4k.gp.functional.FunctionTreeNodeConstructors
+import com.asdacap.ea4k.gp.functional.CallCtx
+import com.asdacap.ea4k.gp.functional.NodeFunction
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.reflect.typeOf
@@ -25,7 +27,7 @@ class GBBenchmark {
 
     @Test
     fun testIntegerAdd() {
-        val factory = FromFuncTreeNodeFactory.fromFunction(this::primitive)
+        val factory = FromFuncTreeNode.factoryFromFunction(this::primitive)
         var cnode = createConstantTreeNode(1)
         (1..1000).forEach {
             cnode = factory.createNode(listOf(cnode, createConstantTreeNode(1)))
@@ -45,7 +47,7 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderIntegerAdd() {
-        val factory = FromFuncTreeNodeFactory.fromFunction(this::higherOrderPrimitive)
+        val factory = FromFuncTreeNode.factoryFromFunction(this::higherOrderPrimitive)
         var cnode = createConstantTreeNode({ ctx: CallCtx -> 1 } as (CallCtx) -> Int, KotlinNodeType(typeOf<(CallCtx) -> Int>()))
         (1..1000).forEach {
             cnode = factory.createNode(
@@ -67,9 +69,9 @@ class GBBenchmark {
     @Test
     fun testHigherOrderWithFunctionMaker() {
         val factory = FunctionTreeNodeConstructors.fromFunctionMaker({
-            val in1 = it[0] as Function<Int>
-            val in2 = it[1] as Function<Int>
-            Function {
+            val in1 = it[0] as NodeFunction<Int>
+            val in2 = it[1] as NodeFunction<Int>
+            NodeFunction {
                 primitive(in1.call(it), in2.call(it))
             }
         }, listOf(KotlinNodeType(typeOf<Int>())))
@@ -89,7 +91,7 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionFactory() {
-        val factory = FunctionTreeNodeConstructors.fromBinaryFunction(::primitive)
+        val factory = FunctionTreeNodeConstructors.fromFunction(::primitive)
         var cnode = FunctionTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
             cnode = factory.createNode(listOf(cnode, FunctionTreeNodeConstructors.createConstantTreeNode(1)));

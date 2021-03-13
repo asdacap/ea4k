@@ -45,16 +45,16 @@ class PSet<R>(val returnType: NodeType) {
 
     val objectMapper = ObjectMapper()
 
-    fun <R> serializeToJson(tree: BaseTreeNode<R>): JsonNode {
+    fun <R> serializeToJson(tree: TreeNode<R>): JsonNode {
         val factory = serializers.find {
-            it.second == tree.treeNodeFactory
+            it.second == tree.factory
         }
 
         if (factory == null) {
             throw Exception("Cant find factory for tree of type: " + tree.javaClass.canonicalName)
         }
 
-        val parent = (factory.second as TreeNodeFactory<R>).serialize(tree, objectMapper)
+        val parent = tree.state
         val childs = tree.children.map { serializeToJson(it) }
 
         val json = objectMapper.createObjectNode()
@@ -72,7 +72,7 @@ class PSet<R>(val returnType: NodeType) {
         return json
     }
 
-    fun deserialize(jsonNode: JsonNode): BaseTreeNode<*> {
+    fun deserialize(jsonNode: JsonNode): TreeNode<*> {
         val factoryName = jsonNode.get("factory").asText()!!
 
         val factory = serializers.find {
@@ -91,7 +91,7 @@ class PSet<R>(val returnType: NodeType) {
             }
 
         val nodeInfo = jsonNode.get("node") ?: objectMapper.createObjectNode()
-        return factory.second.deserialize(nodeInfo, children)
+        return factory.second.createNode(children, nodeInfo)
     }
 
     fun getTerminalAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {

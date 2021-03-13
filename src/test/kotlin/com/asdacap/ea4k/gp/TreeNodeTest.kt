@@ -3,26 +3,23 @@ package com.asdacap.ea4k.gp
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
-class BaseTreeNodeTest {
+class TreeNodeTest {
 
-    class TestNodeType(val value: Int, override val children: List<BaseTreeNode<*>>): BaseTreeNode<Int>() {
-        override val treeNodeFactory: TreeNodeFactory<Int>
+    class TestNodeType(val value: Int, override val children: List<TreeNode<*>>): TreeNode<Int>() {
+        override val factory: TreeNodeFactory<Int>
             get() = throw NotImplementedError()
 
         override fun evaluate(): Int {
             return value
         }
 
-        override fun isNodeEffectivelySame(otherTree: BaseTreeNode<*>): Boolean {
+        override fun isNodeEffectivelySame(otherTree: TreeNode<*>): Boolean {
             return otherTree is TestNodeType && value == otherTree.value
         }
 
-        override val returnType: NodeType = KotlinNodeType(typeOf<Int>())
-
-        override fun replaceChildren(newChildren: List<BaseTreeNode<*>>): BaseTreeNode<Int> {
+        override fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<Int> {
             return TestNodeType(value, newChildren)
         }
     }

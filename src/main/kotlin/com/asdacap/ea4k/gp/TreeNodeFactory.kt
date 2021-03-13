@@ -1,7 +1,6 @@
 package com.asdacap.ea4k.gp
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 
 /**
  * Something that makes treenode. This is what stored in pset.
@@ -23,14 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
  * can recreate it.
  *
  */
-interface TreeNodeFactory<out R>: TreeNodeSerializer {
+interface TreeNodeFactory<out R> {
     val returnType: NodeType
     val args: List<NodeType>
 
-    fun createNode(children: List<BaseTreeNode<*>>): BaseTreeNode<R>
-}
-
-interface TreeNodeSerializer {
-    fun serialize(tree: BaseTreeNode<*>, objectMapper: ObjectMapper): JsonNode
-    fun deserialize(nodeInfo: JsonNode, children: List<BaseTreeNode<*>>): BaseTreeNode<*>
+    fun createNode(children: List<TreeNode<*>>, state: JsonNode? = null): TreeNode<R>
 }

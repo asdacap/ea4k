@@ -1,9 +1,9 @@
-package com.asdacap.ea4k.gp
+package com.asdacap.ea4k.gp.functional
 
 /**
  * A SAM that represent the callable function
  */
-fun interface Function<out R> {
+fun interface NodeFunction<out R> {
     fun call(ctx: CallCtx): R
 }
 
