@@ -1,6 +1,5 @@
 package com.asdacap.ea4k.gp
 
-import com.asdacap.ea4k.gp.functional.NodeFunction
 import com.fasterxml.jackson.databind.JsonNode
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.reflect
@@ -11,19 +10,19 @@ import kotlin.reflect.jvm.reflect
  */
 class GeneratorTreeNode<R>(
     val constant: R,
-    override val factory: TreeNodeFactory<NodeFunction<R>>,
-): TreeNode<NodeFunction<R>>() {
+    override val factory: TreeNodeFactory<R>,
+): TreeNode<R>() {
     override val state: JsonNode by lazy {
         val value = Utils.objectMapper.createObjectNode()
         value.set<JsonNode>("constant", Utils.objectMapper.valueToTree(constant))
         value
     }
 
-    override fun evaluate(): NodeFunction<R> {
-        return NodeFunction { constant }
+    override fun evaluate(): R {
+        return constant
     }
 
-    override fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<NodeFunction<R>> {
+    override fun replaceChildren(newChildren: List<TreeNode<*>>): TreeNode<R> {
         return GeneratorTreeNode(constant, factory)
     }
 
@@ -31,8 +30,8 @@ class GeneratorTreeNode<R>(
         val generator: () -> R,
         val kotlinReturnType: Class<*> = generator.reflect()!!.returnType.jvmErasure.java,
         override val returnType: NodeType = KotlinNodeType(generator.reflect()!!.returnType)
-    ) : TreeNodeFactory<NodeFunction<R>> {
-        override fun createNode(children: List<TreeNode<*>>, state: JsonNode?): TreeNode<NodeFunction<R>> {
+    ) : TreeNodeFactory<R> {
+        override fun createNode(children: List<TreeNode<*>>, state: JsonNode?): TreeNode<R> {
             val constant = if (state == null) {
                 generator()
             } else {

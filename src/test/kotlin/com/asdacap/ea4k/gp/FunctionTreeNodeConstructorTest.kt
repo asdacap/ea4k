@@ -29,7 +29,7 @@ class FunctionTreeNodeConstructorTest {
         val arg2 = arg2Factory.createNode(listOf())
         val ctx = CallCtx(2, 3)
 
-        val factory = FunctionTreeNodeConstructors.fromKCallable(this::primitive)
+        val factory = FunctionTreeNodeConstructors.fromKCallable<CallCtx, Int>(this::primitive)
         assertTrue(functionalNodeTypeFromKType(typeOf<Int>()).isAssignableTo(factory.returnType))
         val node = factory.createNode(listOf(arg1, arg2))
         assertEquals(node.evaluate().call(ctx), 5)
@@ -37,18 +37,18 @@ class FunctionTreeNodeConstructorTest {
 
     @Test
     fun testCommonBehaviour() {
-        val factory = FunctionTreeNodeConstructors.fromKCallable(this::primitive)
-        testCommonNodeBehaviour(factory, listOf(createConstantTreeNode(0), createConstantTreeNode(1)))
+        val factory = FunctionTreeNodeConstructors.fromKCallable<CallCtx, Int>(this::primitive)
+        testCommonNodeBehaviour(factory, listOf(createConstantTreeNode<Int>(0), createConstantTreeNode(1)))
     }
 
     @Test
     fun testConstantOptimization() {
-        val constant1Factory = fromConstant(2)
-        val constant2Factory = fromConstant(3)
+        val constant1Factory = fromConstant<Int>(2)
+        val constant2Factory = fromConstant<Int>(3)
         val constant1 = constant1Factory.createNode(listOf())
         val constant2 = constant2Factory.createNode(listOf())
 
-        val factory = FunctionTreeNodeConstructors.fromKCallable(this::primitive)
+        val factory = FunctionTreeNodeConstructors.fromKCallable<CallCtx, Int>(this::primitive, noopInput = CallCtx())
         assertTrue(functionalNodeTypeFromKType(typeOf<Int>()).isAssignableTo(factory.returnType))
         val node = factory.createNode(listOf(constant1, constant2))
         val evaluated = node.evaluate()
