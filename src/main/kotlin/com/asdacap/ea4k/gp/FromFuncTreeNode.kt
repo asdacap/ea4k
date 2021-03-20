@@ -21,7 +21,7 @@ class FromFuncTreeNode <R>(
          * Create a tree node factory from a kotlin KCallable. This will use reflection to detect the callable's
          * argument and return type.
          */
-        inline fun <reified R> factoryFromFunction(
+        inline fun <reified R> fromFunction(
             func: KCallable<R>,
             type: NodeType = KotlinNodeType(typeOf<R>()),
             parameters: List<NodeType> = func.parameters.map { KotlinNodeType(it.type) }
@@ -34,7 +34,7 @@ class FromFuncTreeNode <R>(
         /**
          * Create a tree node factory that always return the same result.
          */
-        inline fun <reified R> factoryFromConstant(
+        inline fun <reified R> fromConstant(
             constant: R,
             type: NodeType = KotlinNodeType(typeOf<R>())
         ): Factory<R> {

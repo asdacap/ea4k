@@ -22,23 +22,57 @@ object Generator {
         var recurGen: ((Int, NodeType) -> TreeNode<*>)? = null
         recurGen = { depth, ret ->
             if (condition(height, depth)) {
-                val terminalOpts = pset.getTerminalAssignableTo(ret)
-                if (terminalOpts.isEmpty()) {
+                val terminalOpts = pset.selectTerminalAssignableTo(ret)
+                if (terminalOpts == null) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a terminal of type $ret, but there is " +
                             "none available.")
                 }
-                val pickedTerminal = Utils.randomChoice(terminalOpts)
-                pickedTerminal.createNode(listOf())
+                terminalOpts.createNode(listOf())
             } else {
-                val primitiveOpts = pset.getPrimitiveAssignableTo(ret)
-                if (primitiveOpts.isEmpty()) {
+                val primitiveOpts = pset.selectPrimitiveAssignableTo(ret)
+                if (primitiveOpts == null) {
                     throw Exception("The ea4k.gp.generate function tried to add " +
                             "a primitive of type '$ret', but there is " +
                             "none available.".format(ret))
                 }
-                val primitive = Utils.randomChoice(primitiveOpts)
-                primitive.createNode(primitive.args.map { recurGen!!.invoke(depth+1, it) }.toList())
+                primitiveOpts.createNode(primitiveOpts.args.map { recurGen!!.invoke(depth+1, it) }.toList())
+            }
+        }
+
+        return recurGen(0, type)
+    }
+
+    /**
+     * Like generate, but if either primitive or terminal is not found, it will use what is available and only
+     * throw an exception if both are not available
+     */
+    fun <R> safeGenerate(pset: PSet<R>, min: Int, max: Int, condition: (Int, Int) -> Boolean, type: NodeType): TreeNode<*> {
+        val height = Random.nextInt(min, max)
+
+        var recurGen: ((Int, NodeType) -> TreeNode<*>)? = null
+        recurGen = { depth, ret ->
+            val terminalOpts = pset.selectTerminalAssignableTo(ret)
+            val primitiveOpts = pset.selectPrimitiveAssignableTo(ret)
+
+            if (terminalOpts == null && primitiveOpts == null) {
+                throw Exception("The ea4k.gp.generate function tried to add " +
+                        "a node of type '$ret', but there is " +
+                        "none available.".format(ret))
+            }
+
+            if (condition(height, depth)) {
+                if (terminalOpts == null) {
+                    primitiveOpts!!.createNode(primitiveOpts.args.map { recurGen!!.invoke(depth+1, it) }.toList())
+                } else {
+                    terminalOpts.createNode(listOf())
+                }
+            } else {
+                if (primitiveOpts == null) {
+                    terminalOpts!!.createNode(listOf())
+                } else {
+                    primitiveOpts.createNode(primitiveOpts.args.map { recurGen!!.invoke(depth+1, it) }.toList())
+                }
             }
         }
 

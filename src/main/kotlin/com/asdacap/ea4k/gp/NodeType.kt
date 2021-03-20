@@ -2,6 +2,7 @@ package com.asdacap.ea4k.gp
 
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSupertypeOf
+import kotlin.reflect.typeOf
 
 /**
  * A NodeType is a type that represent a type of a base tree node. Specifically, it is used by the generator to
@@ -13,6 +14,10 @@ interface NodeType {
     companion object {
         fun fromKotlinNodeType(kType: KType): KotlinNodeType {
             return KotlinNodeType(kType)
+        }
+
+        inline fun <reified T> fromKotlinNodeType(): KotlinNodeType {
+            return KotlinNodeType(typeOf<T>())
         }
     }
 }

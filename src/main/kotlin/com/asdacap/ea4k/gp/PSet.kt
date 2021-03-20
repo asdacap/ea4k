@@ -3,48 +3,32 @@ package com.asdacap.ea4k.gp
 import com.asdacap.ea4k.gp.Utils.objectMapper
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import kotlin.random.Random.Default.nextDouble
 
 /**
  * Stores a set of terminal and primitives
  */
 class PSet<R>(val returnType: NodeType) {
+
+    data class FactoryEntry(val name: String, val weight: Double, val factory: TreeNodeFactory<*>)
+
     val terminalRatio: Double
         get() {
-            val terminalCount = terminals.map { it.value.size }.sum()
-            val primitiveCount = primitives.map { it.value.size }.sum()
+            val terminalCount = terminals.size
+            val primitiveCount = primitives.size
             return terminalCount.toDouble() / (primitiveCount + terminalCount).toDouble()
         }
-    private val terminals: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
-    private val primitives: MutableMap<NodeType, MutableList<TreeNodeFactory<*>>> = mutableMapOf()
-    private val serializers: MutableList<Pair<String, TreeNodeFactory<*>>> = mutableListOf()
+    private val factories: MutableList<FactoryEntry> = mutableListOf()
+    private val terminals: List<FactoryEntry> get() = factories.filter { it.factory.args.size == 0 }
+    private val primitives: List<FactoryEntry> get() = factories.filter { it.factory.args.size != 0 }
 
-    private fun <R> addTerminal(name: String, terminal: TreeNodeFactory<R>) {
-        if (terminals[terminal.returnType] == null) {
-            terminals[terminal.returnType] = mutableListOf()
-        }
-        terminals[terminal.returnType]?.add(terminal)
-        serializers.add(0, name to terminal)
-    }
-
-    private fun <R> addPrimitive(name: String, primitive: TreeNodeFactory<R>) {
-        if (primitives[primitive.returnType] == null) {
-            primitives[primitive.returnType] = mutableListOf()
-        }
-        primitives[primitive.returnType]?.add(primitive)
-        serializers.add(0, name to primitive)
-    }
-
-    fun <R> addTreeNodeFactory(name: String, primitive: TreeNodeFactory<R>) {
-        if (primitive.args.size == 0) {
-            addTerminal(name, primitive)
-        } else {
-            addPrimitive(name, primitive)
-        }
+    fun <R> addTreeNodeFactory(name: String, primitive: TreeNodeFactory<R>, weight: Double = 1.0) {
+        factories.add(0, FactoryEntry(name, weight, primitive))
     }
 
     fun <R> serialize(tree: TreeNode<R>): JsonNode {
-        val factory = serializers.find {
-            it.second == tree.factory
+        val factory = factories.find {
+            it.factory == tree.factory
         }
 
         if (factory == null) {
@@ -59,7 +43,7 @@ class PSet<R>(val returnType: NodeType) {
         childs.forEach {
             childArray.add(it)
         }
-        json.put("factory", factory.first)
+        json.put("factory", factory.name)
         if (parent != objectMapper.nullNode()) {
             json.set<ObjectNode>("node", parent)
         }
@@ -72,8 +56,8 @@ class PSet<R>(val returnType: NodeType) {
     fun deserialize(jsonNode: JsonNode): TreeNode<*> {
         val factoryName = jsonNode.get("factory").asText()!!
 
-        val factory = serializers.find {
-            it.first == factoryName
+        val factory = factories.find {
+            it.name == factoryName
         }
         if (factory == null) {
             throw Exception("Unknown factory $factoryName")
@@ -88,14 +72,44 @@ class PSet<R>(val returnType: NodeType) {
             }
 
         val nodeInfo = jsonNode.get("node") ?: null
-        return factory.second.createNode(children, nodeInfo)
+        return factory.factory.createNode(children, nodeInfo)
     }
 
-    fun getTerminalAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {
-        return terminals.filter { it.key.isAssignableTo(ret) } .flatMap { it.value }
+    fun getTerminalsAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {
+        return terminals.filter { it.factory.returnType.isAssignableTo(ret) } .map { it.factory }
     }
 
-    fun getPrimitiveAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {
-        return primitives.filter { it.key.isAssignableTo(ret) } .flatMap { it.value }
+    fun getPrimitivesAssignableTo(ret: NodeType): List<TreeNodeFactory<*>> {
+        return primitives.filter { it.factory.returnType.isAssignableTo(ret) } .map { it.factory }
+    }
+
+    fun selectTerminalAssignableTo(ret: NodeType): TreeNodeFactory<*>? {
+        val terminals = this.terminals.toList()
+        val totalWeight = terminals.map { it.weight }.sum()
+
+        var randomNumber = nextDouble() * totalWeight
+        var cumulative = 0.0;
+        terminals.forEach {
+            cumulative = cumulative + it.weight
+            if (cumulative > randomNumber) {
+                return it.factory
+            }
+        }
+        return null
+    }
+
+    fun selectPrimitiveAssignableTo(ret: NodeType): TreeNodeFactory<*>? {
+        val primitives = this.primitives.toList()
+        val totalWeight = primitives.map { it.weight }.sum()
+
+        var randomNumber = nextDouble() * totalWeight
+        var cumulative = 0.0;
+        primitives.forEach {
+            cumulative = cumulative + it.weight
+            if (cumulative > randomNumber) {
+                return it.factory
+            }
+        }
+        return null
     }
 }
