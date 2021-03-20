@@ -68,14 +68,14 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionMaker() {
-        val factory = FunctionTreeNodeConstructors.fromFunctionMaker({
-            val in1 = it[0] as NodeFunction<Int>
-            val in2 = it[1] as NodeFunction<Int>
+        val factory = FunctionTreeNodeConstructors.fromFunctionMaker<CallCtx, Int>({
+            val in1 = it[0] as NodeFunction<CallCtx, Int>
+            val in2 = it[1] as NodeFunction<CallCtx, Int>
             NodeFunction {
                 primitive(in1.call(it), in2.call(it))
             }
         }, listOf(KotlinNodeType(typeOf<Int>())))
-        var cnode = FunctionTreeNodeConstructors.createConstantTreeNode(1)
+        var cnode: TreeNode<NodeFunction<CallCtx, Int>> = FunctionTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
             cnode = factory.createNode(listOf(cnode, FunctionTreeNodeConstructors.createConstantTreeNode(1)));
         }
@@ -91,8 +91,8 @@ class GBBenchmark {
 
     @Test
     fun testHigherOrderWithFunctionFactory() {
-        val factory = FunctionTreeNodeConstructors.fromFunction(::primitive)
-        var cnode = FunctionTreeNodeConstructors.createConstantTreeNode(1)
+        val factory = FunctionTreeNodeConstructors.fromFunction<CallCtx, Int, Int, Int>(::primitive)
+        var cnode: TreeNode<NodeFunction<CallCtx, Int>>  = FunctionTreeNodeConstructors.createConstantTreeNode(1)
         (1..1000).forEach {
             cnode = factory.createNode(listOf(cnode, FunctionTreeNodeConstructors.createConstantTreeNode(1)));
         }

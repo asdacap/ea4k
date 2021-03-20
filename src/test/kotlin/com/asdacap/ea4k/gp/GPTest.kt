@@ -24,7 +24,7 @@ import kotlin.reflect.typeOf
 class GPTest {
     val MAX_SIZE = 100
 
-    val pset = PSet<NodeFunction<Float>>(functionalNodeTypeFromKType(typeOf<Float>()))
+    val pset = PSet<NodeFunction<CallCtx, Float>>(functionalNodeTypeFromKType(typeOf<Float>()))
 
     fun multiply(n1: Float, n2: Float): Float = n1 * n2
     fun add(n1: Float, n2: Float): Float = n1 + n2
@@ -32,9 +32,9 @@ class GPTest {
 
     init {
         pset.addTreeNodeFactory("ARG0", fromArgs<Float>(0))
-        pset.addTreeNodeFactory("Mul", fromFunction(::multiply))
-        pset.addTreeNodeFactory("Add", fromFunction(::add))
-        pset.addTreeNodeFactory("Sub", fromFunction(::subtract))
+        pset.addTreeNodeFactory("Mul", fromFunction<CallCtx, Float, Float, Float>(::multiply))
+        pset.addTreeNodeFactory("Add", fromFunction<CallCtx, Float, Float, Float>(::add))
+        pset.addTreeNodeFactory("Sub", fromFunction<CallCtx, Float, Float, Float>(::subtract))
         pset.addTreeNodeFactory("Constant1", fromConstant(1.0f))
         pset.addTreeNodeFactory("ConstantNeg99", fromConstant(-99.0f))
         pset.addTreeNodeFactory("Random", fromGenerator { nextFloat() })
@@ -45,9 +45,9 @@ class GPTest {
     }
 
     fun targetEquation(inp: Float) = inp * (inp + 1) * (inp - 99)
-    fun nodeFilter(ind: TreeNode<NodeFunction<Float>>) = ind.size < MAX_SIZE
+    fun nodeFilter(ind: TreeNode<NodeFunction<CallCtx, Float>>) = ind.size < MAX_SIZE
 
-    fun evaluate(individual: TreeNode<NodeFunction<Float>>): Float {
+    fun evaluate(individual: TreeNode<NodeFunction<CallCtx, Float>>): Float {
         val rand = Random(0)
         val func = individual.evaluate()
         return (0..5).map {
@@ -70,7 +70,7 @@ class GPTest {
     }
 
     fun runExperiment(): Boolean {
-        val experiment = toolboxWithEvaluate<TreeNode<NodeFunction<Float>>, Float>
+        val experiment = toolboxWithEvaluate<TreeNode<NodeFunction<CallCtx, Float>>, Float>
         { individual ->
             evaluate(individual)
         }.withSelect { list, k ->
@@ -97,7 +97,7 @@ class GPTest {
         val populationCount = 1000
         val result = Algorithms.eaMuCommaLambda(
             @Suppress("UNCHECKED_CAST")
-            (1..populationCount).map { IndividualWithFitness(treeGenerator() as TreeNode<NodeFunction<Float>>, null) },
+            (1..populationCount).map { IndividualWithFitness(treeGenerator() as TreeNode<NodeFunction<CallCtx, Float>>, null) },
             experiment,
             mu = populationCount,
             lambda_ = populationCount * 5,
