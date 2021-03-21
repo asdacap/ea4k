@@ -8,7 +8,7 @@ import kotlin.random.Random.Default.nextDouble
 /**
  * Stores a set of terminal and primitives
  */
-class PSet<R>(val returnType: NodeType) {
+open class PSet<R>(val returnType: NodeType) {
 
     data class FactoryEntry(val name: String, val weight: Double, val factory: TreeNodeFactory<*>)
 
@@ -84,7 +84,7 @@ class PSet<R>(val returnType: NodeType) {
     }
 
     fun selectTerminalAssignableTo(ret: NodeType): TreeNodeFactory<*>? {
-        val terminals = this.terminals.toList()
+        val terminals = this.terminals.filter { it.factory.returnType.isAssignableTo(ret) }
         val totalWeight = terminals.map { it.weight }.sum()
 
         var randomNumber = nextDouble() * totalWeight
@@ -99,7 +99,7 @@ class PSet<R>(val returnType: NodeType) {
     }
 
     fun selectPrimitiveAssignableTo(ret: NodeType): TreeNodeFactory<*>? {
-        val primitives = this.primitives.toList()
+        val primitives = this.primitives.filter { it.factory.returnType.isAssignableTo(ret) }
         val totalWeight = primitives.map { it.weight }.sum()
 
         var randomNumber = nextDouble() * totalWeight

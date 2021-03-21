@@ -3,8 +3,10 @@ package com.asdacap.ea4k.gp
 import com.asdacap.ea4k.gp.FromFuncTreeNode.Companion.fromConstant
 import com.asdacap.ea4k.gp.FromFuncTreeNode.Companion.fromFunction
 import com.asdacap.ea4k.gp.Generator.safeGenerate
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import kotlin.reflect.typeOf
 
 class PSetTest {
@@ -27,5 +29,17 @@ class PSetTest {
         val serialized = pset.serialize(node)
         val deserialized = pset.deserialize(serialized)
         assertTrue(node.isSubtreeEffectivelySame(deserialized))
+    }
+
+    @Test
+    fun testWhenRequestedImpossibleTypePrimitive_thenReturnNull() {
+        val factory = pset.selectPrimitiveAssignableTo(NodeType.fromKotlinNodeType<Boolean>())
+        assertNull(factory)
+    }
+
+    @Test
+    fun testWhenRequestedImpossibleTypeTerminal_thenReturnNull() {
+        val factory = pset.selectTerminalAssignableTo(NodeType.fromKotlinNodeType<Boolean>())
+        assertNull(factory)
     }
 }
